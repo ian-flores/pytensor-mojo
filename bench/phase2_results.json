@@ -1,0 +1,446 @@
+[
+ {
+  "model": "es8",
+  "nutpie_compile_s": 2.0625344999716617,
+  "numba_kernel_us": 0.9506641651387326,
+  "mojo_kernel_us": 0.03346631249999999,
+  "runs": {
+   "4": [
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.01796775,
+     "grad_evals": 55136,
+     "grad_per_s": 3068609.0356332874,
+     "min_ess_bulk": 2280.034951590687,
+     "ess_per_s": 126895.9636899827,
+     "max_rhat": 1.0024575105790805,
+     "divergences": 2
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.07110666600055993,
+     "grad_evals": 54038,
+     "grad_per_s": 759956.8794235758,
+     "min_ess_bulk": 1922.835844915887,
+     "ess_per_s": 27041.569420520234,
+     "max_rhat": 1.0020523669992139,
+     "divergences": 3,
+     "seconds_raw_trace": 0.015466790995560586
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.019369042,
+     "grad_evals": 54938,
+     "grad_per_s": 2836381.892300094,
+     "min_ess_bulk": 2327.607143395253,
+     "ess_per_s": 120171.5161439194,
+     "max_rhat": 1.0022885109230506,
+     "divergences": 2
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.03666962496936321,
+     "grad_evals": 54887,
+     "grad_per_s": 1496797.418731636,
+     "min_ess_bulk": 1953.9689158413087,
+     "ess_per_s": 53285.76219347248,
+     "max_rhat": 1.0014950663120532,
+     "divergences": 2,
+     "seconds_raw_trace": 0.015933832968585193
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.018198583,
+     "grad_evals": 54736,
+     "grad_per_s": 3007706.698922658,
+     "min_ess_bulk": 1852.838691905478,
+     "ess_per_s": 101812.25054200528,
+     "max_rhat": 1.001906991171052,
+     "divergences": 7
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.03630516701377928,
+     "grad_evals": 54706,
+     "grad_per_s": 1506837.855317863,
+     "min_ess_bulk": 2310.177016407177,
+     "ess_per_s": 63632.18259071418,
+     "max_rhat": 1.0045183721283566,
+     "divergences": 3,
+     "seconds_raw_trace": 0.016464332991745323
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.014758333,
+     "grad_evals": 55324,
+     "grad_per_s": 3748661.8576772865,
+     "min_ess_bulk": 1799.6200067352381,
+     "ess_per_s": 121939.24657583197,
+     "max_rhat": 1.0026981786962748,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.03572066698689014,
+     "grad_evals": 54062,
+     "grad_per_s": 1513465.5805794816,
+     "min_ess_bulk": 2192.194980113443,
+     "ess_per_s": 61370.494031312504,
+     "max_rhat": 1.002955507413731,
+     "divergences": 3,
+     "seconds_raw_trace": 0.01649341598385945
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.018608625,
+     "grad_evals": 55169,
+     "grad_per_s": 2964700.5085007623,
+     "min_ess_bulk": 2218.129003400487,
+     "ess_per_s": 119198.97377697099,
+     "max_rhat": 1.003520482600641,
+     "divergences": 2
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.037969375029206276,
+     "grad_evals": 54776,
+     "grad_per_s": 1442636.334094674,
+     "min_ess_bulk": 2281.610219428101,
+     "ess_per_s": 60090.802592169945,
+     "max_rhat": 1.0012665332588526,
+     "divergences": 6,
+     "seconds_raw_trace": 0.016272375010885298
+    }
+   ],
+   "1": [
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.009864334,
+     "grad_evals": 13864,
+     "grad_per_s": 1405467.414221781,
+     "min_ess_bulk": 488.6635336416711,
+     "ess_per_s": 49538.42131072114,
+     "max_rhat": NaN,
+     "divergences": 1
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.03227395797148347,
+     "grad_evals": 13471,
+     "grad_per_s": 417395.35051457485,
+     "min_ess_bulk": 466.279392353205,
+     "ess_per_s": 14447.542900229306,
+     "max_rhat": NaN,
+     "divergences": 1,
+     "seconds_raw_trace": 0.013291625014971942
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.009246625,
+     "grad_evals": 13748,
+     "grad_per_s": 1486812.7560055696,
+     "min_ess_bulk": 582.0653999492655,
+     "ess_per_s": 62948.957046410505,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.02936937502818182,
+     "grad_evals": 13423,
+     "grad_per_s": 457040.7094846166,
+     "min_ess_bulk": 462.4706504719618,
+     "ess_per_s": 15746.697028050177,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 0.012799374992027879
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.009580292,
+     "grad_evals": 13499,
+     "grad_per_s": 1409038.4718962635,
+     "min_ess_bulk": 570.8057075187045,
+     "ess_per_s": 59581.24319370479,
+     "max_rhat": NaN,
+     "divergences": 1
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.029104042041581124,
+     "grad_evals": 13472,
+     "grad_per_s": 462891.03007590736,
+     "min_ess_bulk": 680.2343459785926,
+     "ess_per_s": 23372.50423864622,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 0.012658708961680532
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.009433083,
+     "grad_evals": 13576,
+     "grad_per_s": 1439190.1353989996,
+     "min_ess_bulk": 369.8235774127094,
+     "ess_per_s": 39204.953185794024,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.028747292002663016,
+     "grad_evals": 13684,
+     "grad_per_s": 476010.05335502134,
+     "min_ess_bulk": 577.2942909141356,
+     "ess_per_s": 20081.692942091995,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 0.012585459044203162
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.009802375,
+     "grad_evals": 14353,
+     "grad_per_s": 1464236.983384129,
+     "min_ess_bulk": 711.0443679898486,
+     "ess_per_s": 72537.96839947958,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 0.028345541970338672,
+     "grad_evals": 13578,
+     "grad_per_s": 479017.1242521411,
+     "min_ess_bulk": 616.7654944986259,
+     "ess_per_s": 21758.818199490466,
+     "max_rhat": NaN,
+     "divergences": 2,
+     "seconds_raw_trace": 0.013162582996301353
+    }
+   ]
+  }
+ },
+ {
+  "model": "hlr",
+  "nutpie_compile_s": 0.6753809999790974,
+  "numba_kernel_us": 124.87912501092069,
+  "mojo_kernel_us": 18.87043335,
+  "runs": {
+   "4": [
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.28574625,
+     "grad_evals": 55980,
+     "grad_per_s": 195908.08278323864,
+     "min_ess_bulk": 8027.737547054206,
+     "ess_per_s": 28093.938405330624,
+     "max_rhat": 1.0029713034227947,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.9077996659907512,
+     "grad_evals": 55570,
+     "grad_per_s": 29127.79627264564,
+     "min_ess_bulk": 8237.716029474039,
+     "ess_per_s": 4317.914598855986,
+     "max_rhat": 1.004413757112248,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7072523329989053
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.275312375,
+     "grad_evals": 55647,
+     "grad_per_s": 202123.13376759764,
+     "min_ess_bulk": 7977.319740489648,
+     "ess_per_s": 28975.52186126631,
+     "max_rhat": 1.0102243729671319,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.8052114159800112,
+     "grad_evals": 55484,
+     "grad_per_s": 30735.45819001976,
+     "min_ess_bulk": 7748.438114120238,
+     "ess_per_s": 4292.260754352573,
+     "max_rhat": 1.0037834508971712,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7266660829773173
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.365639459,
+     "grad_evals": 55623,
+     "grad_per_s": 152125.26610810898,
+     "min_ess_bulk": 7192.389750952084,
+     "ess_per_s": 19670.715438160856,
+     "max_rhat": 1.0044754391167208,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7465729999821633,
+     "grad_evals": 55536,
+     "grad_per_s": 31797.124998821782,
+     "min_ess_bulk": 8150.076979020847,
+     "ess_per_s": 4666.324842479575,
+     "max_rhat": 1.0054006928682393,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7680776670458727
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.290226958,
+     "grad_evals": 55198,
+     "grad_per_s": 190189.08643214323,
+     "min_ess_bulk": 7556.958745439478,
+     "ess_per_s": 26038.100655830458,
+     "max_rhat": 1.0042434403816856,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7342198750120588,
+     "grad_evals": 55147,
+     "grad_per_s": 31799.312644607155,
+     "min_ess_bulk": 7407.976093061825,
+     "ess_per_s": 4271.6475573838725,
+     "max_rhat": 1.0040106039953123,
+     "divergences": 0,
+     "seconds_raw_trace": 1.6800138330436312
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.275613416,
+     "grad_evals": 55469,
+     "grad_per_s": 201256.53099557388,
+     "min_ess_bulk": 7951.998998689298,
+     "ess_per_s": 28852.002613288238,
+     "max_rhat": 1.0063430286999249,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7904631670098752,
+     "grad_evals": 55550,
+     "grad_per_s": 31025.491628945427,
+     "min_ess_bulk": 7879.715295655558,
+     "ess_per_s": 4400.936830672093,
+     "max_rhat": 1.0066198844468783,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7285700420034118
+    }
+   ],
+   "1": [
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.268201708,
+     "grad_evals": 13830,
+     "grad_per_s": 51565.66713587074,
+     "min_ess_bulk": 1591.8621205949376,
+     "ess_per_s": 5935.316864555306,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7863044579862617,
+     "grad_evals": 14049,
+     "grad_per_s": 7864.840697894093,
+     "min_ess_bulk": 1972.995361962586,
+     "ess_per_s": 1104.5123652587113,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7439851249800995
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.266218625,
+     "grad_evals": 13836,
+     "grad_per_s": 51972.32162099853,
+     "min_ess_bulk": 1664.8561325299634,
+     "ess_per_s": 6253.717719900189,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7780584580032155,
+     "grad_evals": 13961,
+     "grad_per_s": 7851.822833585797,
+     "min_ess_bulk": 1278.5803402197914,
+     "ess_per_s": 719.0879098855136,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 1.6653082080301829
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.259699041,
+     "grad_evals": 13828,
+     "grad_per_s": 53246.24976185414,
+     "min_ess_bulk": 1746.4814875053235,
+     "ess_per_s": 6725.020934926453,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.7127670840127394,
+     "grad_evals": 14071,
+     "grad_per_s": 8215.361056001788,
+     "min_ess_bulk": 1633.4768465291904,
+     "ess_per_s": 953.7063514218264,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 1.7227083750185557
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.257625625,
+     "grad_evals": 13789,
+     "grad_per_s": 53523.4024177525,
+     "min_ess_bulk": 1759.4130934862544,
+     "ess_per_s": 6829.340417849561,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.6503414159524255,
+     "grad_evals": 13765,
+     "grad_per_s": 8340.69839546268,
+     "min_ess_bulk": 1710.5177660009392,
+     "ess_per_s": 1036.4629703083501,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 1.6136848339810967
+    },
+    {
+     "impl": "mojo+nuts-rs",
+     "seconds": 0.260490083,
+     "grad_evals": 13809,
+     "grad_per_s": 53011.61503334467,
+     "min_ess_bulk": 1707.5400342521023,
+     "ess_per_s": 6555.105724512754,
+     "max_rhat": NaN,
+     "divergences": 0
+    },
+    {
+     "impl": "nutpie-numba (full call)",
+     "seconds": 1.694250833010301,
+     "grad_evals": 13992,
+     "grad_per_s": 8258.517409219376,
+     "min_ess_bulk": 1700.2400040526852,
+     "ess_per_s": 1003.534996663831,
+     "max_rhat": NaN,
+     "divergences": 0,
+     "seconds_raw_trace": 1.660567415994592
+    }
+   ]
+  }
+ }
+]

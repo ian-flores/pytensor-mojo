@@ -1,0 +1,24 @@
+[package]
+name = "mojo-nuts"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "nuts-rs driver for Mojo-generated C-ABI logp+grad libraries"
+
+[dependencies]
+anyhow = "1.0.105"
+arrow = { version = "59", default-features = false }
+libloading = "0.9.1"
+nuts-rs = { version = "=0.18.3", features = ["arrow"] }
+nuts-storable = "=0.3.0"
+rand = "0.10"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+
+[lib]
+name = "mojo_nuts"
+
+[profile.release]
+lto = true
+codegen-units = 1

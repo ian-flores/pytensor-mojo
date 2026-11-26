@@ -1,0 +1,15 @@
+# environments and build outputs
+.pixi/
+sampler/target/
+__mojocache__/
+__pycache__/
+.pytest_cache/
+
+# compiled Mojo artifacts
+*.so
+*.dylib
+gpu/vec_add
+gpu/eight_schools_gpu
+
+# OS cruft
+.DS_Store
