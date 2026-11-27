@@ -47,8 +47,10 @@ fn main() -> Result<()> {
     let cores: usize = get("--cores").map_or(Ok(chains), |v| v.parse())?;
     let data = match get("--data") {
         Some(p) => std::fs::read(p)?
-            .chunks_exact(8)
-            .map(|c| f64::from_le_bytes(c.try_into().expect("8 bytes")))
+            .as_chunks::<8>()
+            .0
+            .iter()
+            .map(|c| f64::from_le_bytes(*c))
             .collect(),
         None => Vec::new(),
     };

@@ -1,5 +1,7 @@
 # pytensor-mojo
 
+[![tests](https://github.com/ian-flores/pytensor-mojo/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ian-flores/pytensor-mojo/actions/workflows/tests.yml)
+
 A Mojo backend for PyTensor that compiles PyMC models' logp and gradient into fused SIMD
 kernels. The kernels are sampled with NUTS through a C ABI, with no Python in the gradient
 loop.
