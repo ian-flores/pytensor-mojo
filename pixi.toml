@@ -24,6 +24,24 @@ test = { cmd = "pytest -v tests", depends-on = ["build", "build-sampler"] }
 test-rust = { cmd = "cargo fmt --check && cargo clippy --release --all-targets -- -D warnings && cargo test --release", cwd = "sampler", depends-on = ["build"] }
 bench-phase2 = { cmd = "python bench/phase2_nuts.py --reps 5", depends-on = ["build", "build-sampler"] }
 bench-phase3 = { cmd = "python bench/phase2_nuts.py --reps 5 --out bench/phase3_results.json", depends-on = ["build", "build-sampler"] }
+bench-phase4 = { cmd = "python bench/phase4_sampling.py --reps 5", depends-on = ["build", "build-sampler"] }
+accuracy = "python bench/phase4_accuracy.py"
+census-phase4 = "python bench/phase4_census.py"
+docs-assets = "python docs/gen/build_assets.py"
 bench-q1 = { cmd = "python bench/q1_overhead.py", depends-on = ["build"] }
 bench-q2 = { cmd = "python bench/q2_eight_schools.py", depends-on = ["build"] }
 census = "python bench/q3_op_census.py"
+
+[feature.docs.dependencies]
+python = "3.12.*"
+mkdocs = "1.6.*"
+mkdocs-material = "9.8.*"
+mkdocstrings-python = "2.0.*"
+black = "*"
+
+[feature.docs.tasks]
+docs-build = { cmd = "mkdocs build --strict", env = { NO_MKDOCS_2_WARNING = "1" } }
+docs-serve = { cmd = "mkdocs serve --strict --dev-addr 127.0.0.1:{{ port }}", args = [{ arg = "port", default = "8000" }], env = { NO_MKDOCS_2_WARNING = "1" } }
+
+[environments]
+docs = { features = ["docs"], no-default-feature = true }

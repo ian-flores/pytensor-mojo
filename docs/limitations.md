@@ -1,0 +1,31 @@
+# Limitations and roadmap
+
+## Current limitations
+
+| Area | Limitation |
+|---|---|
+| Platform | Built and tested only on macOS / Apple Silicon. Linux should be possible, but the build assumes `.dylib`. |
+| Shapes | Fused loops specialize on static dims, which PyMC models with constant data have. Runtime-shaped graphs use a generic path that does not fuse dots or scatters. |
+| Linear algebra | No BLAS. Unfused `Dot` and axis reductions are scalar loops. No Cholesky, solves or determinants. |
+| Indexing | Gather and scatter are 1-D (`a[idx]`). No multi-dimensional advanced indexing, no `set_subtensor`. |
+| Special functions | No trigamma or polygamma, incomplete gamma or beta, Bessel functions or erfcx. |
+| Transcendentals | Per-lane libm calls. Accurate, but they cap the speedup on `exp`/`log1p`/`lgamma`-heavy models at 1.6-2.5x. |
+| Control flow | No `Scan`, no `IfElse`. |
+| Data types | Computation is float64. Integer and bool data are packed as float64, which is exact for these values. |
+| Python path | `MOJO_ND` through `pytensor.function` pays PyTensor's per-call overhead. Sampling should go through the C ABI. |
+| Coverage | 27 single-distribution census models and five sampled models; no broad model sweep yet. |
+
+## Roadmap
+
+1. **Special functions, done in rev 0.2.** gammaln, digamma, erf/erfc, log1mexp, pow, sign and
+   others, with accuracy tests. Next in this area:
+   - an accurate vectorized exp, log1p and lgamma;
+   - trigamma;
+   - incomplete gamma and beta.
+2. **posteriordb model sweep.** Compile and sample a broad set of reference models, and track
+   coverage and speed against nutpie.
+3. **Linear algebra.** Cholesky, triangular solves and log-determinants (MvNormal, LKJ).
+4. **Scan.** Time-series and recurrent models.
+5. **Apple GPU many-chain sampler.** float32 batched logp + gradient across many chains. A first
+   check gave about 1e-7 typical error, so the GPU suits massively parallel chains rather than
+   single-chain NUTS.

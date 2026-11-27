@@ -1,0 +1,8 @@
+# Documentation build for CI (no Mojo, no PyMC needed: API pages are read statically by griffe).
+# Keep in sync with [feature.docs.dependencies] in pixi.toml.
+mkdocs==1.6.1
+mkdocs-material==9.8.2
+mkdocstrings==1.0.8
+mkdocstrings-python==2.0.11
+pymdown-extensions==13.1.2
+black==26.10.1

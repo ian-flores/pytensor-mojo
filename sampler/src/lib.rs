@@ -170,6 +170,10 @@ pub struct ChainOut {
     /// Leapfrog steps summed over warmup and draws.
     pub n_steps_total: u64,
     pub step_size: f64,
+    /// Per post-warmup draw: whether the trajectory diverged.
+    pub diverging: Vec<bool>,
+    /// Per post-warmup draw: leapfrog steps.
+    pub n_steps: Vec<u64>,
 }
 
 #[derive(Serialize)]
@@ -270,6 +274,8 @@ pub fn run(lib: Arc<MojoLib>, settings: DiagNutsSettings, cores: usize) -> Resul
             n_steps_draws: keep.iter().map(|&i| n_steps[i] as u64).sum(),
             n_steps_total: n_steps.iter().map(|&x| x as u64).sum(),
             step_size: keep.last().map(|&i| step[i]).unwrap_or(f64::NAN),
+            diverging: keep.iter().map(|&i| diverging[i] != 0.0).collect(),
+            n_steps: keep.iter().map(|&i| n_steps[i] as u64).collect(),
             draws: out,
         });
     }

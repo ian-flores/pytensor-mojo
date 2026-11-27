@@ -1,12 +1,38 @@
 //! CLI: mojo-nuts --lib PATH --model NAME [--data FILE.f64] [--chains 4] [--tune 1000]
-//!                [--draws 1000] [--seed 1] [--cores N] [--out out.json]
+//!                [--draws 1000] [--seed 1] [--cores N] [--out out.json] [--repeat 1]
+//!                [--bench-evals N]
 use std::sync::Arc;
 
 use anyhow::{Result, anyhow};
 use mojo_nuts::{MojoLib, nutpie_like_settings, run};
 
+const USAGE: &str = "\
+usage: mojo-nuts --lib PATH --model NAME [options]
+
+Samples a Mojo C-ABI model library (<NAME>_dim / <NAME>_logp_grad) with nuts-rs NUTS,
+using nutpie's default settings (diagonal mass matrix, maxdepth 10, target_accept 0.8).
+
+options:
+  --lib PATH         shared library exporting <NAME>_dim and <NAME>_logp_grad
+  --model NAME       symbol prefix inside the library
+  --data FILE        little-endian float64 model data buffer (from compile_model_capi)
+  --chains N         number of chains (default 4)
+  --tune N           warmup draws per chain (default 1000)
+  --draws N          post-warmup draws per chain (default 1000)
+  --seed N           base random seed (default 1)
+  --cores N          worker threads (default: chains)
+  --out FILE         write the JSON result here (default: stdout)
+  --repeat N         sample N times in-process (seeds seed..seed+N-1), report all timings
+  --bench-evals N    time N logp+grad evaluations at x = 0.1 and exit
+  --help             show this message
+";
+
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 || args.iter().any(|a| a == "--help" || a == "-h") {
+        print!("{USAGE}");
+        return Ok(());
+    }
     let get = |k: &str| -> Option<String> {
         args.iter()
             .position(|a| a == k)

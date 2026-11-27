@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-label="Architecture" class="ds-figure-svg" font-family="Space Mono, ui-monospace, Menlo, monospace">
+<title>Architecture</title>
+<rect x="0" y="0" width="720" height="250" fill="#fbf6ec"/>
+<rect x="20.0" y="60" width="118" height="74" fill="#f4ecdc" stroke="#2b1f12" stroke-width="1.1"/>
+<text x="79.0" y="84" font-size="12.5" fill="#2b1f12" text-anchor="middle" font-weight="700">PyMC model</text>
+<text x="79.0" y="104" font-size="10.5" fill="#2b1f12" text-anchor="middle">pm.Model</text>
+<line x1="138.0" y1="97.0" x2="154.5" y2="97.0" stroke="#2b1f12" stroke-width="1.2"/>
+<path d="M153.5,93.0 L160.5,97.0 L153.5,101.0 Z" fill="#2b1f12"/>
+<rect x="160.5" y="60" width="118" height="74" fill="#f4ecdc" stroke="#2b1f12" stroke-width="1.1"/>
+<text x="219.5" y="84" font-size="12.5" fill="#2b1f12" text-anchor="middle" font-weight="700">PyTensor graph</text>
+<text x="219.5" y="104" font-size="10.5" fill="#2b1f12" text-anchor="middle">logp + grad,</text>
+<text x="219.5" y="118" font-size="10.5" fill="#2b1f12" text-anchor="middle">flat vector</text>
+<line x1="278.5" y1="97.0" x2="295.0" y2="97.0" stroke="#2b1f12" stroke-width="1.2"/>
+<path d="M294.0,93.0 L301.0,97.0 L294.0,101.0 Z" fill="#2b1f12"/>
+<rect x="301.0" y="60" width="118" height="74" fill="#f4ecdc" stroke="#bf5a36" stroke-width="1.8"/>
+<text x="360.0" y="84" font-size="12.5" fill="#2b1f12" text-anchor="middle" font-weight="700">ndcodegen</text>
+<text x="360.0" y="104" font-size="10.5" fill="#2b1f12" text-anchor="middle">fuse, SIMD,</text>
+<text x="360.0" y="118" font-size="10.5" fill="#2b1f12" text-anchor="middle">C ABI</text>
+<line x1="419.0" y1="97.0" x2="435.5" y2="97.0" stroke="#2b1f12" stroke-width="1.2"/>
+<path d="M434.5,93.0 L441.5,97.0 L434.5,101.0 Z" fill="#2b1f12"/>
+<rect x="441.5" y="60" width="118" height="74" fill="#f4ecdc" stroke="#2b1f12" stroke-width="1.1"/>
+<text x="500.5" y="84" font-size="12.5" fill="#2b1f12" text-anchor="middle" font-weight="700">lib<m>.dylib</text>
+<text x="500.5" y="104" font-size="10.5" fill="#2b1f12" text-anchor="middle">mojo build</text>
+<line x1="559.5" y1="97.0" x2="576.0" y2="97.0" stroke="#2b1f12" stroke-width="1.2"/>
+<path d="M575.0,93.0 L582.0,97.0 L575.0,101.0 Z" fill="#2b1f12"/>
+<rect x="582.0" y="60" width="118" height="74" fill="#f4ecdc" stroke="#2b1f12" stroke-width="1.1"/>
+<text x="641.0" y="84" font-size="12.5" fill="#2b1f12" text-anchor="middle" font-weight="700">mojo-nuts</text>
+<text x="641.0" y="104" font-size="10.5" fill="#2b1f12" text-anchor="middle">nuts-rs NUTS</text>
+<path d="M360.0,134 V174 H641.0 V140" fill="none" stroke="#3f5d72" stroke-width="1.2" stroke-dasharray="4 3"/>
+<path d="M637.0,146 L641.0,138 L645.0,146 Z" fill="#3f5d72"/>
+<text x="500.5" y="168" font-size="10.5" fill="#3f5d72" text-anchor="middle">packed model data (X, y, indices) as float64 / int64</text>
+<text x="20" y="30" font-size="10.5" fill="#2b1f12">Python, compile time</text>
+<line x1="430.2" y1="18" x2="430.2" y2="230" stroke="#dcc8a4" stroke-width="1"/>
+<text x="438.2" y="30" font-size="10.5" fill="#2b1f12">native, per gradient: no Python</text>
+<text x="20" y="242" font-size="10.5" fill="#2b1f12">int32 &lt;m&gt;_logp_grad(const double* data, const double* x, double* grad, double* logp)</text>
+</svg>

@@ -5,6 +5,9 @@ __mojocache__/
 __pycache__/
 .pytest_cache/
 
+# documentation build output
+site/
+
 # compiled Mojo artifacts
 *.so
 *.dylib

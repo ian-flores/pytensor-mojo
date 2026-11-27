@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% set ds = config.extra.datasheet %}
+
+{% block content %}
+  <div class="ds-band ds-band--top" aria-label="Document header">
+    <span class="ds-band__part">{{ ds.part }}</span>
+    <span class="ds-band__title">{{ page.title }}</span>
+    <span class="ds-band__doc">{{ ds.doc }} / Rev {{ ds.rev }}</span>
+  </div>
+  {{ super() }}
+{% endblock %}
+
+{% block footer %}
+  <footer class="ds-footer">
+    <nav class="ds-footer__pager" aria-label="Page navigation">
+      {% if page.previous_page %}
+        <a class="ds-footer__prev" href="{{ page.previous_page.url | url }}" rel="prev">Previous: {{ page.previous_page.title }}</a>
+      {% else %}<span></span>{% endif %}
+      {% if page.next_page %}
+        <a class="ds-footer__next" href="{{ page.next_page.url | url }}" rel="next">Next: {{ page.next_page.title }}</a>
+      {% endif %}
+    </nav>
+    <div class="ds-band ds-band--bottom">
+      <span>{{ ds.part | lower }} datasheet {{ ds.doc }}</span>
+      <span>{% if page.parent %}{{ page.parent.title }} / {% endif %}{{ page.title }}</span>
+      <span>Rev {{ ds.rev }} / Apache-2.0</span>
+    </div>
+  </footer>
+{% endblock %}

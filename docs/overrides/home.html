@@ -1,0 +1,24 @@
+{% extends "main.html" %}
+{% set ds = config.extra.datasheet %}
+
+{% block content %}
+  <div class="ds-band ds-band--top" aria-label="Document header">
+    <span class="ds-band__part">{{ ds.part }}</span>
+    <span class="ds-band__title">Datasheet</span>
+    <span class="ds-band__doc">{{ ds.doc }} / Rev {{ ds.rev }}</span>
+  </div>
+  <header class="ds-titleblock">
+    <div class="ds-titleblock__main">
+      <p class="ds-titleblock__part">{{ ds.part }}</p>
+      <h1 class="ds-titleblock__desc">Mojo backend for PyTensor and PyMC, with fused SIMD logp + gradient kernels sampled by NUTS through a C ABI</h1>
+    </div>
+    <dl class="ds-titleblock__cells">
+      <div><dt>Revision</dt><dd>{{ ds.rev }}</dd></div>
+      <div><dt>Status</dt><dd>{{ ds.status }}</dd></div>
+      <div><dt>Document</dt><dd>{{ ds.doc }}</dd></div>
+      <div><dt>Platform</dt><dd>macOS, Apple Silicon</dd></div>
+      <div><dt>License</dt><dd>Apache-2.0</dd></div>
+    </dl>
+  </header>
+  {{ page.content }}
+{% endblock %}
