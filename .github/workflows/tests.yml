@@ -36,8 +36,10 @@ jobs:
           cache-write: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           locked: true
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Pinned so a new stable clippy lint cannot turn unrelated PRs red; bump on purpose.
+      - uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: "1.100.0"
           components: rustfmt, clippy
 
       - uses: Swatinem/rust-cache@v2
