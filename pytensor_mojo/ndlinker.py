@@ -31,7 +31,7 @@ class _Runner:
         self.fn = getattr(self.lib, f"{self.name}_run")
         self.fn.restype = ctypes.c_int32
         self.fn.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
-        self.consts = [const_array(c, o) for c, o in self.info["consts"]]
+        self.consts = [const_array(c, o, dt) for c, o, dt in self.info["consts"]]
         self.nin = len(fgraph.inputs)
         self.in_types = [v.type for v in fgraph.inputs]
         self.out_dtypes = [o.type.dtype for o in fgraph.outputs]
@@ -62,6 +62,12 @@ class _Runner:
 
 
 class MojoNDLinker(JITLinker):
+    """PyTensor ``JITLinker`` that compiles a FunctionGraph with ``ndcodegen``.
+
+    Each compiled function becomes one generated Mojo library, called through ``ctypes``.
+    Use it through the :data:`MOJO_ND` mode: ``pytensor.function(..., mode=MOJO_ND)``.
+    """
+
     required_rewrites = ("minimum_compile",)
     incompatible_rewrites = ("cxx_only", "BlasOpt", "inplace", "numba")
 
@@ -78,11 +84,29 @@ class MojoNDLinker(JITLinker):
 
 
 MOJO_ND = Mode(MojoNDLinker(), QUERY)
+"""PyTensor ``Mode``: ``MojoNDLinker`` plus backend-neutral ``fast_run`` rewrites (no C/BLAS/inplace)."""
 
 
 # ----------------------------------------------------------- sampler path
 def flat_logp_grad(model):
-    """Return (q, [logp, grad]) on a flat unconstrained vector q with static length."""
+    """Build logp and its gradient over one flat unconstrained vector.
+
+    Parameters
+    ----------
+    model : pymc.Model
+        Model whose value variables all have static shapes.
+
+    Returns
+    -------
+    q : TensorVariable
+        Flat float64 vector of length ``dim``, the value variables in ``model.value_vars`` order.
+    logp : TensorVariable
+        ``model.logp(jacobian=True)`` with the value variables replaced by slices of ``q``.
+    grad : TensorVariable
+        Gradient of ``logp`` with respect to ``q``.
+    dim : int
+        Length of ``q``.
+    """
     vv = model.value_vars
     sizes = [int(np.prod(v.type.shape)) if v.ndim else 1 for v in vv]
     if any(s is None for v in vv for s in v.type.shape):
@@ -117,9 +141,27 @@ class _Capture(JITLinker):
 
 
 def compile_model_capi(model, name):
-    """Optimized flat logp+grad graph -> lib<name>.dylib with <name>_dim/<name>_logp_grad.
+    """Compile a PyMC model's logp and gradient into a C-ABI shared library.
 
-    Returns (so_path, packed_data float64 array, dim, info).
+    Parameters
+    ----------
+    model : pymc.Model
+        Model to compile. Free variables need static shapes, and every op of the optimized
+        graph must be supported (see ``missing_ops``).
+    name : str
+        Symbol prefix: the library exports ``<name>_dim``, ``<name>_logp_grad`` and
+        ``<name>_run``.
+
+    Returns
+    -------
+    so_path : pathlib.Path
+        The compiled library, cached by a hash of the generated source.
+    data : numpy.ndarray
+        float64 buffer of packed constants to pass as the ``data`` argument.
+    dim : int
+        Length of the unconstrained parameter vector.
+    info : dict
+        ``source`` (generated Mojo), ``src_path``, ``consts`` and shape metadata.
     """
     q, lp, g, dim = flat_logp_grad(model)
     _Capture.sink.clear()
@@ -130,7 +172,19 @@ def compile_model_capi(model, name):
 
 
 class CapiModel:
-    """ctypes access to <name>_logp_grad for tests."""
+    """Call a library's ``<name>_logp_grad`` from Python through ``ctypes``.
+
+    Calling the object with a float64 vector ``x`` returns ``(status, logp, grad)``.
+
+    Parameters
+    ----------
+    so : path-like
+        Library from :func:`compile_model_capi`.
+    name : str
+        Symbol prefix used at compile time.
+    data : numpy.ndarray
+        The packed data buffer returned by :func:`compile_model_capi`.
+    """
 
     def __init__(self, so, name, data):
         self.lib = ctypes.CDLL(str(so))

@@ -47,7 +47,7 @@ from pytensor.graph.basic import Constant
 from pytensor.raise_op import CheckAndRaise
 from pytensor.scalar import basic as ps
 from pytensor.scalar import math as psm
-from pytensor.tensor.basic import Alloc, Join, ScalarFromTensor, TensorFromScalar
+from pytensor.tensor.basic import Alloc, Join, MakeVector, ScalarFromTensor, TensorFromScalar
 from pytensor.tensor.elemwise import CAReduce, DimShuffle, Elemwise
 from pytensor.tensor.math import Dot, Sum
 from pytensor.tensor import subtensor as _st
@@ -61,6 +61,8 @@ CACHE = pathlib.Path(os.environ.get("PYTENSOR_MOJO_CACHE", pathlib.Path(__file__
 W = int(os.environ.get("PYTENSOR_MOJO_SIMD", "8"))
 # Opt-in: x / splat(s) -> x * splat(1 / s) inside SIMD loops (changes rounding by <= 1-2 ulp).
 RECIP = os.environ.get("PYTENSOR_MOJO_RECIP", "0") == "1"
+# Opt-in: vectorized std.math.exp instead of per-lane libm exp (~1e-12 relative error in Mojo 1.2).
+STDEXP = os.environ.get("PYTENSOR_MOJO_STDEXP", "0") == "1"
 
 MTYPE = {"float64": "Float64", "int64": "Int64", "bool": "Bool"}
 DT = {"float64": "DType.float64", "int64": "DType.int64", "bool": "DType.bool"}
@@ -106,6 +108,7 @@ class Buf:
     shape: list
     strides: list
     offset: str = "0"
+    mask: bool = False   # float64 storage holding 0/1, read as bool (packed bool constants)
 
     @property
     def ndim(self):
@@ -128,6 +131,12 @@ class Scal:
 class Bcast:       # array of given ndim whose every element is a scalar value
     scal: Scal
     ndim: int
+
+
+@dataclass
+class ScalList:    # MakeVector of bool scalars (only consumed by All)
+    items: list
+    dtype: str
 
 
 @dataclass
@@ -176,6 +185,24 @@ def _sop_table(w):
         ps.OR: lambda a, b: f"({a} | {b})",
         ps.Invert: lambda a: f"(~{a})",
         ps.Switch: lambda c, a, b: f"{c}.select({a}, {b})",
+        # Phase 4 special functions
+        psm.GammaLn: lambda a: f"vlgamma[{w}]({a})",
+        psm.Psi: lambda a: f"vpsi[{w}]({a})",
+        psm.Erf: lambda a: f'vlibm1["erf", {w}]({a})',
+        psm.Erfc: lambda a: f'vlibm1["erfc", {w}]({a})',
+        ps.Expm1: lambda a: f'vlibm1["expm1", {w}]({a})',
+        psm.Log1mexp: lambda a: f"vlog1mexp[{w}]({a})",
+        ps.Pow: lambda a, b: f"vpow[{w}]({a}, {b})",
+        ps.Sign: lambda a: f"vsign[{w}]({a})",
+        ps.IsInf: lambda a: f"({a}.eq(SIMD[DType.float64, {w}](POS_INF)) | {a}.eq(SIMD[DType.float64, {w}](NEG_INF)))",
+        ps.IsNan: lambda a: f"{a}.ne({a})",
+        ps.Floor: lambda a: f'vlibm1["floor", {w}]({a})',
+        ps.Ceil: lambda a: f'vlibm1["ceil", {w}]({a})',
+        ps.Log2: lambda a: f'vlibm1["log2", {w}]({a})',
+        ps.Log10: lambda a: f'vlibm1["log10", {w}]({a})',
+        ps.Tanh: lambda a: f'vlibm1["tanh", {w}]({a})',
+        ps.Cos: lambda a: f'vlibm1["cos", {w}]({a})',
+        ps.Sin: lambda a: f'vlibm1["sin", {w}]({a})',
     }
 
 
@@ -200,6 +227,113 @@ def vexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
     return r
 
 
+# ---- special functions (Phase 4). libm where it is accurate; psi implemented here.
+comptime PI = 3.14159265358979323846264338327950288
+comptime PSI_ROOT = 1.4616321449683622  # positive root of digamma, nearest double
+comptime PSI_ROOT_C0 = -9.241265521729427e-17  # psi(PSI_ROOT) (root is not exactly representable)
+# Taylor coefficients of psi about PSI_ROOT, highest order first: polygamma(n, root) / n!, n = 25..1
+comptime PSI_C = [5.178575795222089e-05, -7.569179582195077e-05, 0.0001106337276874743, -0.00016170622091974825, 0.00023635601564027086, -0.0003454680251063082, 0.0005049532658346026, -0.000738070938996006, 0.0010788252019162975, -0.0015769367714301987, 0.00230512632673493, -0.0033698016554393312, 0.004926781395729858, -0.007204534386356875, 0.010538791616612182, -0.015424765904948968, 0.022597648232218125, -0.033161126474847376, 0.048804288164143145, -0.07219956125645476, 0.10782405069126239, -0.16394270544240658, 0.2584997609556512, -0.44276316898359214, 0.9676722454476214]
+
+
+@always_inline
+def _lgamma(x: Float64) -> Float64:
+    # reentrant lgamma_r: plain lgamma writes the global signgam (data race across chains)
+    var sg = Int32(0)
+    return external_call["lgamma_r", Float64](x, Pointer(to=sg))
+
+
+# Digamma. Reflection for x <= 0; Taylor series about the positive root for
+# |x - root| < 0.25 (keeps relative accuracy where psi crosses zero); otherwise the
+# recurrence psi(x) = psi(x + 1) - 1/x up to y >= 10 and the asymptotic series
+# log(y) - 1/(2y) - sum B_2k / (2k y^2k) through B_14 (same as Cephes / PyTensor).
+def _psi(x0: Float64) -> Float64:
+    var x = x0
+    if x <= 0.0:
+        if x == external_call["floor", Float64](x):
+            if x == 0.0:
+                return NEG_INF if 1.0 / x > 0.0 else POS_INF  # scipy: psi(+0) = -inf, psi(-0) = +inf
+            return NAN
+        # psi(x) = psi(1 - x) - pi / tan(pi x), using exact sinpi/cospi argument reduction
+        var c = external_call["__cospi", Float64](x) / external_call["__sinpi", Float64](x)
+        return _psi(1.0 - x) - PI * c
+    var d = x - PSI_ROOT
+    if abs(d) < 0.25:
+        var r = Float64(0)
+        comptime for k in range(25):
+            comptime ck = PSI_C[k]
+            r = r * d + ck
+        return r * d + PSI_ROOT_C0
+    # Compensated recurrence: sum 1/y in double-double (TwoSum, plus the exact FMA residual
+    # of each reciprocal), so the final cancellation log(y) - sum stays accurate.
+    var s_hi = Float64(0)
+    var s_lo = Float64(0)
+    var y = x
+    while y < 10.0:
+        var r = 1.0 / y
+        var r_lo = (-r).fma(y, 1.0) / y      # (1 - r*y) / y, exact numerator via fma
+        var t = s_hi + r
+        var bb = t - s_hi
+        s_lo += ((s_hi - (t - bb)) + (r - bb)) + r_lo
+        s_hi = t
+        y += 1.0
+    var R = 1.0 / y
+    var R2 = R * R
+    var ser = R2 * (1.0 / 12.0 - R2 * (1.0 / 120.0 - R2 * (1.0 / 252.0 - R2 * (1.0 / 240.0
+        - R2 * (1.0 / 132.0 - R2 * (691.0 / 32760.0 - R2 / 12.0))))))
+    return (log(y) - s_hi) + ((-0.5 * R - ser) - s_lo)
+
+
+@always_inline
+def vlgamma[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    var r = SIMD[DType.float64, w]()
+    comptime for l in range(w):
+        r[l] = _lgamma(x[l])
+    return r
+
+
+@always_inline
+def vpsi[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    var r = SIMD[DType.float64, w]()
+    comptime for l in range(w):
+        r[l] = _psi(x[l])
+    return r
+
+
+@always_inline
+def vlibm1[name: StaticString, w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    var r = SIMD[DType.float64, w]()
+    comptime for l in range(w):
+        r[l] = external_call[name, Float64](x[l])
+    return r
+
+
+@always_inline
+def vpow[w: Int](x: SIMD[DType.float64, w], y: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    var r = SIMD[DType.float64, w]()
+    comptime for l in range(w):
+        r[l] = external_call["pow", Float64](x[l], y[l])
+    return r
+
+
+@always_inline
+def vlog1mexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    # log(1 - exp(x)) for x <= 0 (Maechler 2012): log(-expm1(x)) near 0, log1p(-exp(x)) otherwise
+    var r = SIMD[DType.float64, w]()
+    comptime for l in range(w):
+        var v = x[l]
+        if v > -0.6931471805599453:
+            r[l] = log(-external_call["expm1", Float64](v))
+        else:
+            r[l] = log1p(-external_call["exp", Float64](v))
+    return r
+
+
+@always_inline
+def vsign[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:
+    comptime F = SIMD[DType.float64, w]
+    return x.gt(F(0)).select(F(1), x.lt(F(0)).select(F(-1), x))
+
+
 @always_inline
 def _p64(tab: Pointer[Int64, MutAnyOrigin], k: Int) -> Pointer[Float64, MutAnyOrigin]:
     return Pointer[Float64, MutAnyOrigin](unsafe_from_address=Int(tab[unsafe_offset=k]))
@@ -219,9 +353,14 @@ class Plan:
     n: str = ""
     inlined: dict = field(default_factory=dict)     # input var -> ("gather"|"rowdot", producer nodes, info)
     sums: dict = field(default_factory=dict)        # out idx -> Sum node(s)
+    ands: dict = field(default_factory=dict)        # out idx -> All (CAReduce AND) node(s)
     coldots: dict = field(default_factory=dict)     # out idx -> (Squeeze node, Dot node, AT var)
     scatters: dict = field(default_factory=dict)    # out idx -> AdvancedIncSubtensor node
     materialize: set = field(default_factory=set)   # out idx that must be stored
+
+
+def _is_all(op):
+    return isinstance(op, CAReduce) and isinstance(op.scalar_op, ps.AND)
 
 
 def _clients(fg, v):
@@ -305,7 +444,8 @@ class Codegen:
         if isinstance(val, Bcast):
             return val.scal.expr
         if isinstance(val, Buf):
-            return f"{val.ptr}[unsafe_offset={val.index(idx_exprs or ['0'] * val.ndim)}]"
+            e = f"{val.ptr}[unsafe_offset={val.index(idx_exprs or ['0'] * val.ndim)}]"
+            return f"{e}.ne(Float64(0))" if val.mask else e
         raise RuntimeError(f"cannot read {val}")
 
     # ------------------------------------------------------------ planning
@@ -353,6 +493,9 @@ class Codegen:
                     if isinstance(c.op, Sum) and (c.op.axis is None or tuple(c.op.axis) == (0,)):
                         p.sums.setdefault(k, []).append(c)
                         continue
+                    if _is_all(c.op) and (c.op.axis is None or tuple(c.op.axis) == (0,)):
+                        p.ands.setdefault(k, []).append(c)
+                        continue
                     if isinstance(c.op, (AdvancedIncSubtensor, AdvancedIncSubtensor1)) and len(c.inputs) == 3 \
                             and c.inputs[1] is o and c.inputs[0].type.ndim == 1 \
                             and c.inputs[0].type.shape[0] is not None and not c.op.set_instead_of_inc \
@@ -374,13 +517,15 @@ class Codegen:
                 self.skip.update(prods)
             for lst in p.sums.values():
                 self.done.update(lst)
+            for lst in p.ands.values():
+                self.done.update(lst)
             for lst in p.coldots.values():
                 for c, dot, sq in lst:
                     self.done.update([c, dot, sq])
 
     # ------------------------------------------------------------ binding
-    def bind_tab(self, v, k, shape_exprs):
-        dt = v.type.dtype
+    def bind_tab(self, v, k, shape_exprs, dt=None):
+        dt = dt or v.type.dtype
         if dt not in MTYPE:
             raise NotImplementedError(f"dtype {dt}")
         ptr = f"b{k}"
@@ -427,8 +572,23 @@ class Codegen:
                 sidx += 1
             self.input_shape_names.append(names)
             self.vals[v] = self.bind_tab(v, i, self.bshape(v, names))
+        # Array constants: integer arrays used only as gather/scatter indices stay int64;
+        # everything else (float32 data, integer observations used in arithmetic) is packed
+        # as float64 (exact for |v| < 2**53), so the kernel computes in float64 throughout.
+        self.const_dtype = {}
+        for c in consts:
+            kind = np.asarray(c.data).dtype.kind
+            index_only = all(
+                (isinstance(cl.op, (AdvancedSubtensor, AdvancedSubtensor1)) and i >= 1) or
+                (isinstance(cl.op, (AdvancedIncSubtensor, AdvancedIncSubtensor1)) and i >= 2)
+                for cl, i in fg.clients[c] if not isinstance(cl, str))
+            self.const_dtype[c] = "int64" if kind in "iu" and index_only else ("bool" if kind == "b" else "float64")
         for j, c in enumerate(consts):
-            self.vals[c] = self.bind_tab(c, nin + j, [str(s) for s in c.data.shape])
+            dt = self.const_dtype[c]
+            v = self.bind_tab(c, nin + j, [str(s) for s in c.data.shape], "float64" if dt == "bool" else dt)
+            if dt == "bool" and isinstance(v, Buf):
+                v.mask = True       # bool constants are packed as float64 0/1
+            self.vals[c] = v
         self.out_base = nin + nc
         arena_at = len(self.lines)
         for node in fg.toposort():
@@ -474,8 +634,9 @@ class Codegen:
                 if dt == "bool":
                     self.vals[v] = Scal("True" if v.data else "False", "bool")
                 else:
-                    self.vals[v] = Scal(f"Float64({_flit(v.data)})", "float64") if dt.startswith("float") \
-                        else Scal(f"Int64({int(v.data)})", "int64")
+                    # integer 0-d constants only ever feed float arithmetic here (index constants
+                    # are read from v.data directly by Subtensor), so render them as Float64
+                    self.vals[v] = Scal(f"Float64({_flit(v.data)})", "float64")
                 return
         raise RuntimeError(f"value not computed: {v} (owner {v.owner})")
 
@@ -530,6 +691,10 @@ class Codegen:
             return self.join(node)
         if isinstance(op, Alloc):
             return self.alloc_op(node)
+        if _is_all(op):
+            return self.reduce_all(node)
+        if isinstance(op, MakeVector):
+            return self.make_vector(node)
         raise NotImplementedError(f"MojoND: unsupported op {op} ({type(op).__name__})")
 
     def as_scal(self, val, dtype):
@@ -569,7 +734,7 @@ class Codegen:
             self.emit(f"var {s} = {self.vals[o].expr}")
             self.vals[o] = Scal(s, val.dtype)
             return
-        self.vals[o] = Buf(val.ptr, val.dtype, shape, st, val.offset)
+        self.vals[o] = Buf(val.ptr, val.dtype, shape, st, val.offset, mask=val.mask)
 
     def subtensor(self, node):
         x = node.inputs[0]
@@ -607,7 +772,7 @@ class Codegen:
             self.emit(f"var {s} = {val.ptr}[unsafe_offset={off}]")
             self.vals[o] = Scal(s, val.dtype)
         else:
-            self.vals[o] = Buf(val.ptr, val.dtype, shape, st, off)
+            self.vals[o] = Buf(val.ptr, val.dtype, shape, st, off, mask=val.mask)
 
     @staticmethod
     def const_int(v):
@@ -638,7 +803,7 @@ class Codegen:
         if all(o.type.ndim == 0 or all(s == 1 for s in o.type.shape) for o in out):
             args = [self.scalar_of(self.vals[x]) if not isinstance(self.vals[x], Buf)
                     else self.scalar_of(self.vals[x], ["0"] * self.vals[x].ndim) for x in node.inputs]
-            res = self.scalar_expr(node.op.scalar_op, args, "1")
+            res = self.scalar_expr(node.op.scalar_op, args, "1", [x.type.dtype for x in node.inputs], node.outputs[0].type.dtype)
             for o, e in zip(out, res):
                 s = self.fresh("s")
                 self.emit(f"var {s} = {e}")
@@ -647,7 +812,7 @@ class Codegen:
             return
         return self.nd_elemwise(node)
 
-    def scalar_expr(self, sop, args, w):
+    def scalar_expr(self, sop, args, w, types=None, otype=None):
         tbl = _sop_table(w)
         if isinstance(sop, ps.Composite):
             env = dict(zip(sop.fgraph.inputs, args))
@@ -658,12 +823,12 @@ class Codegen:
                         ins.append(env[x])
                     elif isinstance(x, ps.ScalarConstant):
                         if x.type.dtype == "bool":
-                            ins.append(f"SIMD[DType.bool, {w}]({'True' if x.data else 'False'})")
+                            ins.append(f"SIMD[DType.bool, {w}](fill={'True' if x.data else 'False'})")
                         else:
                             ins.append(f"SIMD[DType.float64, {w}]({_flit(x.data)})")
                     else:
                         raise RuntimeError(x)
-                outs = self.scalar_expr(nd.op, ins, w)
+                outs = self.scalar_expr(nd.op, ins, w, [x.type.dtype for x in nd.inputs], nd.outputs[0].type.dtype)
                 for o, e in zip(nd.outputs, outs):
                     t = self.fresh("t")
                     self.emit(f"var {t} = {e}")
@@ -672,10 +837,23 @@ class Codegen:
         fn = tbl.get(type(sop))
         if fn is None:
             raise NotImplementedError(f"MojoND: unsupported scalar op {type(sop).__name__}")
+        if otype == "bool" and isinstance(sop, (ps.Mul, ps.Add)):
+            # PyTensor: Mul / Add of bools are logical and / or
+            return ["(" + (" & " if isinstance(sop, ps.Mul) else " | ").join(args) + ")"]
+        if isinstance(sop, ps.Switch) and types and types[0] != "bool":
+            # PyTensor: a nonzero numeric condition is true (integer data is packed as float64)
+            args = [f"({args[0]}).ne(SIMD[DType.float64, {w}](0))", *args[1:]]
+        if types and otype and otype.startswith("float"):
+            # PyTensor upcasts bool operands of arithmetic ops to float
+            args = [f"{a}.cast[DType.float64]()" if t == "bool" and not (isinstance(sop, ps.Switch) and j == 0)
+                    else a for j, (a, t) in enumerate(zip(args, types))]
         return [fn(*args)]
 
     def loader(self, val, i, w, dtype="float64"):
         """Return a Mojo expression for elements [i, i+w) of a 1-D value along its only dim."""
+        if isinstance(val, Buf) and val.mask:
+            raw = self.loader(Buf(val.ptr, "float64", val.shape, val.strides, val.offset), i, w, "float64")
+            return f"{raw}.ne(SIMD[DType.float64, {w}](0))"
         F = f"SIMD[{DT[dtype]}, {w}]"
         if isinstance(val, Scal):
             return f"{F}({val.expr})"
@@ -719,11 +897,11 @@ class Codegen:
         outbufs = {}
         for k in sorted(p.materialize):
             o = node.outputs[k]
-            if o.type.dtype != "float64":
-                raise NotImplementedError("materialized non-float64 elemwise output")
-            ptr = self.alloc("float64", [n])
+            if o.type.dtype not in ("float64", "bool"):
+                raise NotImplementedError(f"materialized {o.type.dtype} elemwise output")
+            ptr = self.alloc("float64", [n])   # bool outputs are stored as float64 0/1 masks
             outbufs[k] = ptr
-            self.vals[o] = Buf(ptr, "float64", [n], ["1"])
+            self.vals[o] = Buf(ptr, "float64", [n], ["1"], mask=o.type.dtype == "bool")
         # accumulators
         accs = {}
         for k, lst in p.sums.items():
@@ -731,6 +909,12 @@ class Codegen:
             self.emit(f"var {a} = SIMD[DType.float64, W](0)")
             self.emit(f"var {a}_t = Float64(0)")
             accs[k] = a
+        aaccs = {}
+        for k, lst in p.ands.items():
+            a = self.fresh("and")
+            self.emit(f"var {a} = SIMD[DType.bool, W](fill=True)")
+            self.emit(f"var {a}_t = True")
+            aaccs[k] = a
         colacc = {}
         for k, lst in p.coldots.items():
             for (c, dot, sq) in lst:
@@ -826,12 +1010,17 @@ class Codegen:
                         args.append(e)
                 else:
                     args.append(self.loader(self.vals[x], i, w, x.type.dtype if x.type.dtype in DT else "float64"))
-            res = self.scalar_expr(node.op.scalar_op, args, w)
+            res = self.scalar_expr(node.op.scalar_op, args, w, [x.type.dtype for x in node.inputs], node.outputs[0].type.dtype)
             for k, ptr in outbufs.items():
-                self.emit(f"{ptr}.unsafe_offset({i}).unsafe_store({res[k]})" if w != "1"
-                          else f"{ptr}[unsafe_offset={i}] = {res[k]}")
+                v = res[k]
+                if node.outputs[k].type.dtype == "bool":
+                    v = f"{v}.select(SIMD[DType.float64, {w}](1), SIMD[DType.float64, {w}](0))"
+                self.emit(f"{ptr}.unsafe_offset({i}).unsafe_store({v})" if w != "1"
+                          else f"{ptr}[unsafe_offset={i}] = {v}")
             for k, a in accs.items():
                 self.emit(f"{a} += {res[k]}" if w != "1" else f"{a}_t += {res[k]}")
+            for k, a in aaccs.items():
+                self.emit(f"{a} = {a} & {res[k]}" if w != "1" else f"{a}_t = {a}_t and Bool({res[k]})")
             for (k, sq), (AT, names) in colacc.items():
                 for kk, nm in enumerate(names):
                     row = Buf(AT.ptr, AT.dtype, [AT.shape[1]], [AT.strides[1]], _add(AT.offset, _mul(str(kk), AT.strides[0])))
@@ -886,6 +1075,11 @@ class Codegen:
             self.emit(f"var {s} = {accs[k]}.reduce_add() + {accs[k]}_t")
             for snode in lst:
                 self.vals[snode.outputs[0]] = Scal(s, "float64")
+        for k, lst in p.ands.items():
+            s = self.fresh("s")
+            self.emit(f"var {s} = SIMD[DType.bool, 1]({aaccs[k]}.reduce_and() and {aaccs[k]}_t)")
+            for snode in lst:
+                self.vals[snode.outputs[0]] = Scal(s, "bool")
         for (k, sq), (AT, names) in colacc.items():
             ptr = self.alloc("float64", [str(len(names))])
             for kk, nm in enumerate(names):
@@ -916,10 +1110,10 @@ class Codegen:
             shape.append(e)
         outs = []
         for o in node.outputs:
-            if o.type.dtype != "float64":
-                raise NotImplementedError("materialized non-float64 elemwise output")
-            ptr = self.alloc("float64", shape)
-            b = Buf(ptr, "float64", shape, self.c_strides(shape))
+            if o.type.dtype not in ("float64", "bool"):
+                raise NotImplementedError(f"materialized {o.type.dtype} elemwise output")
+            ptr = self.alloc("float64", shape)   # bool outputs stored as float64 0/1 masks
+            b = Buf(ptr, "float64", shape, self.c_strides(shape), mask=o.type.dtype == "bool")
             self.vals[o] = b
             outs.append(b)
         outer = [self.fresh("j") for _ in range(nd - 1)]
@@ -933,7 +1127,7 @@ class Codegen:
                 off = val.offset
                 for ix, s in zip(outer, st[:-1]):
                     off = _add(off, _mul(ix, s))
-                return Buf(val.ptr, val.dtype, [val.shape[-1]], [st[-1]], off)
+                return Buf(val.ptr, val.dtype, [val.shape[-1]], [st[-1]], off, mask=val.mask)
             return val
 
         ins = [sub(self.vals[x]) for x in node.inputs]
@@ -942,8 +1136,10 @@ class Codegen:
 
         def body(w, i):
             args = [self.loader(v, i, w) for v in ins]
-            res = self.scalar_expr(node.op.scalar_op, args, w)
+            res = self.scalar_expr(node.op.scalar_op, args, w, [x.type.dtype for x in node.inputs], node.outputs[0].type.dtype)
             for b, e in zip(osub, res):
+                if b.mask:
+                    e = f"{e}.select(SIMD[DType.float64, {w}](1), SIMD[DType.float64, {w}](0))"
                 if w == "1":
                     self.emit(f"{b.ptr}[unsafe_offset={b.index([i])}] = {e}")
                 else:
@@ -1005,6 +1201,36 @@ class Codegen:
         self.emit(f"{ptr}[unsafe_offset={ob.index([idx[d] for d in keep])}] += {self.scalar_of(val, idx)}")
         self.ind -= nd
         self.vals[o] = ob
+
+    def reduce_all(self, node):
+        """All over a bool value: scalars/broadcasts/MakeVector lists only (arrays are fused)."""
+        (x,), (o,) = node.inputs, node.outputs
+        val = self.vals[x]
+        if isinstance(val, Scal):
+            self.vals[o] = val
+        elif isinstance(val, Bcast):
+            self.vals[o] = val.scal
+        elif isinstance(val, ScalList):
+            s = self.fresh("s")
+            e = " and ".join(f"Bool({v.expr})" for v in val.items) or "True"
+            self.emit(f"var {s} = SIMD[DType.bool, 1]({e})")
+            self.vals[o] = Scal(s, "bool")
+        else:
+            raise NotImplementedError("MojoND: All over a materialized bool array")
+
+    def make_vector(self, node):
+        o = node.outputs[0]
+        items = [self.as_scal(self.vals[x], x.type.dtype) for x in node.inputs]
+        if o.type.dtype == "bool":
+            self.vals[o] = ScalList(items, "bool")
+            return
+        if o.type.dtype != "float64":
+            raise NotImplementedError(f"MakeVector of {o.type.dtype}")
+        n = str(len(items))
+        ptr = self.alloc("float64", [n])
+        for k, it in enumerate(items):
+            self.emit(f"{ptr}[unsafe_offset={k}] = Float64({it.expr})")
+        self.vals[o] = Buf(ptr, "float64", [n], ["1"])
 
     def dot(self, node):
         a, b = node.inputs
@@ -1120,11 +1346,35 @@ class Codegen:
 
 # ---------------------------------------------------------------- building
 def build_library(fgraph, name, flat_input_dim=None, simd=W):
-    """Generate, compile and return (so_path, info) for fgraph. info has const list + shape exprs."""
+    """Generate Mojo source for a FunctionGraph and compile it to a shared library.
+
+    Parameters
+    ----------
+    fgraph : FunctionGraph
+        Optimized graph (see ``ndlinker.QUERY`` for the rewrites used).
+    name : str
+        Symbol prefix of the exported functions.
+    flat_input_dim : int, optional
+        When given, the graph must have one flat 1-D input and two outputs (logp, grad), and
+        the library also exports the sampler ABI ``<name>_dim`` / ``<name>_logp_grad``.
+    simd : int
+        SIMD width (float64 lanes) of the main loops.
+
+    Returns
+    -------
+    so_path : pathlib.Path
+        Library path, cached by a hash of the source.
+    info : dict
+        ``consts`` (constant, layout, dtype), output shape expressions, ``source``, ``src_path``.
+    """
     cg = Codegen(fgraph, name, simd)
     body = cg.generate()
     nin = len(fgraph.inputs)
     src = HEADER.replace("{W}", str(simd))
+    if STDEXP:
+        src = src.replace("def vexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:",
+                          "def vexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:\n    return std_exp(x)", 1)
+        src = src.replace("from std.math import log, log1p, sqrt", "from std.math import log, log1p, sqrt\nfrom std.math import exp as std_exp", 1)
     src += f"\ndef _run_{name}(tab: Pointer[Int64, MutAnyOrigin], shp: Pointer[Int64, MutAnyOrigin]) -> Int32:\n" + body
     src += f"""
 
@@ -1179,26 +1429,27 @@ def {name}_logp_grad(
                            capture_output=True, text=True)
         if r.returncode != 0 or not so.exists():
             raise RuntimeError(f"mojo build failed for {srcf}:\n{r.stdout[-4000:]}\n{r.stderr[-4000:]}")
-    consts = [(c, cg.const_order.get(c, "C")) for c in cg.consts]
+    consts = [(c, cg.const_order.get(c, "C"), cg.const_dtype[c]) for c in cg.consts]
     info = dict(consts=consts, out_shapes=cg.output_shape_exprs, in_shape_names=cg.input_shape_names,
                 source=src, src_path=srcf)
     return so, info
 
 
-def const_array(c, order):
-    a = np.asarray(c.data)
-    if a.dtype == np.int64 or a.dtype.kind in "iu":
-        a = a.astype(np.int64)
-    elif a.dtype != np.float64:
-        a = a.astype(np.float64)
+def const_array(c, order, dtype="float64"):
+    # "bool" constants are packed as float64 0/1 and read back with .ne(0)
+    a = np.asarray(c.data).astype(np.int64 if dtype == "int64" else np.float64)
     return np.asfortranarray(a) if order == "F" else np.ascontiguousarray(a)
 
 
 def pack_data(consts):
-    """[n, offsets..., payload] in float64 slots; offsets and int payloads stored bitwise."""
+    """Pack array constants into the float64 ``data`` buffer of the sampler ABI.
+
+    Layout: ``[n, offset_1 .. offset_n, payload_1 .. payload_n]``. The count, the offsets and
+    int64 payloads are stored bitwise in the float64 slots.
+    """
     n = len(consts)
     head = 1 + n
-    arrs = [const_array(c, o) for c, o in consts]
+    arrs = [const_array(c, o, dt) for c, o, dt in consts]
     sizes = [a.size for a in arrs]
     offs = np.cumsum([head] + sizes[:-1]).astype(np.int64)
     buf = np.zeros(head + sum(sizes), dtype=np.float64)
@@ -1212,3 +1463,42 @@ def pack_data(consts):
         else:
             buf[off:off + a.size] = flat
     return buf
+
+
+# ---------------------------------------------------------------- static op census
+_TENSOR_OK = (Elemwise, DimShuffle, Subtensor, CheckAndRaise, ScalarFromTensor, TensorFromScalar, MakeVector,
+              Dot, AdvancedSubtensor, AdvancedSubtensor1, AdvancedIncSubtensor, AdvancedIncSubtensor1,
+              Join, Alloc)
+
+
+def _scalar_ops_of(sop, acc):
+    if isinstance(sop, ps.Composite):
+        for nd in sop.fgraph.apply_nodes:
+            _scalar_ops_of(nd.op, acc)
+    else:
+        acc.add(type(sop))
+
+
+def missing_ops(fgraph):
+    """Return (missing tensor op names, missing scalar op names) that Codegen cannot emit.
+
+    Mirrors the dispatch in Codegen.node and the scalar table, without generating code, so a
+    census can list every gap of a graph in one pass instead of stopping at the first error.
+    """
+    known_scalar = set(_sop_table("1"))
+    miss_t, miss_s = set(), set()
+    for node in fgraph.apply_nodes:
+        op = node.op
+        if isinstance(op, Sum) or (isinstance(op, CAReduce) and isinstance(op.scalar_op, (ps.Add, ps.AND))):
+            continue
+        if isinstance(op, CAReduce):
+            miss_t.add(f"CAReduce[{type(op.scalar_op).__name__}]")
+            continue
+        if not isinstance(op, _TENSOR_OK):
+            miss_t.add(type(op).__name__)
+            continue
+        if isinstance(op, Elemwise):
+            acc = set()
+            _scalar_ops_of(op.scalar_op, acc)
+            miss_s |= {t.__name__ for t in acc - known_scalar}
+    return sorted(miss_t), sorted(miss_s)

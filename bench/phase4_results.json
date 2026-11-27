@@ -1,0 +1,287 @@
+[
+ {
+  "model": "robust_studentt_N5000",
+  "dim": 6,
+  "gen_build_s": 0.28382841701386496,
+  "nutpie_compile_s": 1.9266877920017578,
+  "gen_kernel_us": 28.5616854,
+  "numba_kernel_us": 82.42144999996526,
+  "rows": [
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.310707958,
+    "grad_evals": 38341,
+    "min_ess": 2596.6524687898773,
+    "max_rhat": 1.0011922259058477,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.6394904999760911,
+    "seconds_full": 0.6950726250070147,
+    "grad_evals": 38139,
+    "min_ess": 2652.071142263954,
+    "max_rhat": 1.0018936575952895,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.312798333,
+    "grad_evals": 38393,
+    "min_ess": 2619.2531994838005,
+    "max_rhat": 1.001374357665715,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.6293131670099683,
+    "seconds_full": 0.6557608750299551,
+    "grad_evals": 38075,
+    "min_ess": 2585.1996527917563,
+    "max_rhat": 1.00162080228487,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.3110145,
+    "grad_evals": 38368,
+    "min_ess": 2713.065699503721,
+    "max_rhat": 1.0012383219733898,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.6409883339656517,
+    "seconds_full": 0.6631569580058567,
+    "grad_evals": 38556,
+    "min_ess": 2496.384840214726,
+    "max_rhat": 1.0019700982495414,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.313209959,
+    "grad_evals": 38679,
+    "min_ess": 2839.621577199668,
+    "max_rhat": 1.0018962395277053,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.6314883750164881,
+    "seconds_full": 0.6623532500234433,
+    "grad_evals": 37764,
+    "min_ess": 2695.024494331667,
+    "max_rhat": 1.0017922583557597,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.316320833,
+    "grad_evals": 39577,
+    "min_ess": 2734.967890197521,
+    "max_rhat": 1.0016716150891518,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.6269684579456225,
+    "seconds_full": 0.6550017080153339,
+    "grad_evals": 37834,
+    "min_ess": 2649.743455734764,
+    "max_rhat": 1.002771304922287,
+    "divergences": 0
+   }
+  ]
+ },
+ {
+  "model": "poisson_glm_N10000",
+  "dim": 6,
+  "gen_build_s": 0.06644458300434053,
+  "nutpie_compile_s": 0.6194718329934403,
+  "gen_kernel_us": 46.375083350000004,
+  "numba_kernel_us": 127.20470312517135,
+  "rows": [
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.393168792,
+    "grad_evals": 32815,
+    "min_ess": 5005.1006053615165,
+    "max_rhat": 1.0012214104138946,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.998396041977685,
+    "seconds_full": 1.0340779999969527,
+    "grad_evals": 32308,
+    "min_ess": 4815.274837616495,
+    "max_rhat": 1.0030250336904312,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.390698125,
+    "grad_evals": 32520,
+    "min_ess": 4662.087489243197,
+    "max_rhat": 1.0028373152079293,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.9648545840173028,
+    "seconds_full": 0.9756604169961065,
+    "grad_evals": 31809,
+    "min_ess": 4922.782664779991,
+    "max_rhat": 1.0014851529576383,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.384361875,
+    "grad_evals": 32559,
+    "min_ess": 4709.889480237929,
+    "max_rhat": 1.0015662891365475,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.9652223750017583,
+    "seconds_full": 1.0115507910377346,
+    "grad_evals": 32081,
+    "min_ess": 5142.406547096094,
+    "max_rhat": 1.0028940923557055,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.388649,
+    "grad_evals": 31881,
+    "min_ess": 5023.171045352973,
+    "max_rhat": 1.0028059794359385,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.9771874590078369,
+    "seconds_full": 1.111806999950204,
+    "grad_evals": 32068,
+    "min_ess": 4992.6439290311655,
+    "max_rhat": 1.003245994139218,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.389668042,
+    "grad_evals": 32273,
+    "min_ess": 5022.458037382296,
+    "max_rhat": 1.0022937714772278,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.9925855830078945,
+    "seconds_full": 1.015308832982555,
+    "grad_evals": 33046,
+    "min_ess": 5024.689595929525,
+    "max_rhat": 1.001555429553292,
+    "divergences": 0
+   }
+  ]
+ },
+ {
+  "model": "beta_binomial_G200",
+  "dim": 202,
+  "gen_build_s": 0.14755941700423136,
+  "nutpie_compile_s": 0.6717604579753242,
+  "gen_kernel_us": 3.8461417,
+  "numba_kernel_us": 5.247437511570752,
+  "rows": [
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.140483833,
+    "grad_evals": 97750,
+    "min_ess": 2559.213520291078,
+    "max_rhat": 1.0057433515701377,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.2146753749693744,
+    "seconds_full": 0.34940683300374076,
+    "grad_evals": 94551,
+    "min_ess": 2274.0311576887516,
+    "max_rhat": 1.006384202488002,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.124003833,
+    "grad_evals": 94648,
+    "min_ess": 2152.4155201257995,
+    "max_rhat": 1.0048688262191168,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.2091962080448866,
+    "seconds_full": 0.24510433297837153,
+    "grad_evals": 92667,
+    "min_ess": 2128.4378254982066,
+    "max_rhat": 1.0049787654333235,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.131301,
+    "grad_evals": 96777,
+    "min_ess": 2155.834166551185,
+    "max_rhat": 1.0072834294671331,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.23307066597044468,
+    "seconds_full": 0.2588926670141518,
+    "grad_evals": 95775,
+    "min_ess": 2367.4678351451075,
+    "max_rhat": 1.0054803251415814,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.132092083,
+    "grad_evals": 92255,
+    "min_ess": 1976.177640843915,
+    "max_rhat": 1.0102671735864124,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.21968533302424476,
+    "seconds_full": 0.2627840419881977,
+    "grad_evals": 94360,
+    "min_ess": 1993.3855856344649,
+    "max_rhat": 1.005230702276392,
+    "divergences": 0
+   },
+   {
+    "impl": "generated-mojo+nuts-rs",
+    "seconds": 0.131128917,
+    "grad_evals": 97199,
+    "min_ess": 2040.4623906823736,
+    "max_rhat": 1.0058998875742755,
+    "divergences": 0
+   },
+   {
+    "impl": "nutpie-numba",
+    "seconds": 0.21701737499097362,
+    "seconds_full": 0.27036941604455933,
+    "grad_evals": 95526,
+    "min_ess": 2191.328016817209,
+    "max_rhat": 1.0046043555540918,
+    "divergences": 0
+   }
+  ]
+ }
+]

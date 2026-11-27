@@ -12,6 +12,7 @@ Contents:
   interface and v1 prototype, Apple GPU check, other checks, go / no-go)
 - Phase 2: NUTS with no Python in the gradient loop (Mojo C ABI driven by nuts-rs)
 - Phase 3: generated N-d, fused, SIMD code through the same C ABI
+- Phase 4: special functions and common likelihoods (census, accuracy, sampling)
 - Caveats across all phases
 - Test record
 
@@ -572,6 +573,232 @@ Measured on the HLR kernel, from first working version to final:
 - `MOJO_ND` through `pytensor.function` still pays PyTensor's per-call Python wrapper (Phase 1
   finding). The fast path is the C ABI driven from Rust.
 - The bool and int64 support is minimal: index arrays and scalar conditions only.
+
+---
+
+# Phase 4: special functions and common likelihoods
+
+Goal: make common PyMC likelihoods and priors compile and sample through `ndcodegen`. Each
+increment was verified before the next.
+
+## 1. Census
+
+`bench/phase4_census.py` builds each distribution twice:
+
+- as an observed likelihood, with free parameters under simple priors;
+- as a free prior with PyMC's default transform.
+
+`ndcodegen.missing_ops(fgraph)` lists every tensor and scalar op the codegen cannot emit for
+the optimized logp + gradient graph, in one pass.
+
+The census before Phase 4:
+
+| distribution | role | transforms | missing tensor ops | missing scalar ops |
+|---|---|---|---|---|
+| StudentT | observed | Log | CAReduce[AND], MakeVector | GammaLn, Psi, Sign |
+| Gamma | observed | Log | CAReduce[AND], MakeVector | GammaLn, Psi |
+| Beta | observed | Log | CAReduce[AND], MakeVector | GammaLn, Psi |
+| Poisson (log link) | observed | - | CAReduce[AND] | - |
+| Binomial (Uniform p) | observed | Interval | CAReduce[AND], MakeVector | - |
+| NegativeBinomial | observed | Log | CAReduce[AND], MakeVector | GammaLn, Psi |
+| Bernoulli (logit_p) | observed | - | CAReduce[AND], MakeVector | - |
+| LogNormal | observed | Log | - | - |
+| Exponential | observed | Log | - | - |
+| HalfNormal | observed | Log | - | - |
+| InverseGamma | observed | Log | CAReduce[AND], MakeVector | GammaLn, Psi |
+| Weibull | observed | Log | CAReduce[AND], MakeVector | Pow |
+| Laplace | observed | Log | - | Sign |
+| Cauchy | observed | Log | - | - |
+| StudentT | prior | - | - | - |
+| Gamma | prior | Log | - | - |
+| Beta | prior | LogOdds | - | - |
+| LogNormal | prior | Log | - | - |
+| Exponential | prior | Log | - | - |
+| HalfNormal | prior | Log | - | - |
+| InverseGamma | prior | Log | - | - |
+| Weibull | prior | Log | - | - |
+| Laplace | prior | - | - | Sign |
+| Cauchy | prior | - | - | - |
+| Uniform (interval) | prior | Interval | - | - |
+| HalfCauchy | prior | Log | - | - |
+
+The union was **2 tensor ops** (`All`, i.e. CAReduce[AND] over parameter checks, and
+`MakeVector`) and **4 scalar ops** (GammaLn, Psi, Sign, Pow). Two observations:
+
+- Priors with constant parameters need no special functions at all, because PyTensor
+  constant-folds terms like `gammaln(alpha)`.
+- erf/erfc are not needed by any of these, since they appear only in CDFs, i.e. censored or
+  truncated likelihoods.
+
+After Phase 4 the census reports nothing missing.
+
+## 2. Implementation
+
+| op | implementation | gradient |
+|---|---|---|
+| gammaln | macOS libm `lgamma_r` (reentrant; plain `lgamma` writes the global `signgam`, a data race across sampler threads) | psi |
+| psi (digamma) | own: reflection with exact `__sinpi`/`__cospi` for x <= 0; degree-25 Taylor series about the positive root 1.4616... for \|x - root\| < 0.25 (coefficients `polygamma(n, root)/n!`); otherwise recurrence to y >= 10 in double-double (TwoSum plus FMA residual of each 1/y) and the asymptotic series through B_14 | trigamma: **not implemented**, raises clearly (NUTS needs first order only) |
+| erf, erfc, expm1, pow, floor, ceil, log2, log10, tanh, sin, cos | libm per lane | via existing ops |
+| log1mexp | Maechler (2012): `log(-expm1(x))` for x > -log 2, else `log1p(-exp(x))` | via existing ops |
+| sign, isinf, isnan | SIMD compare/select | zero / n.a. |
+| All (CAReduce AND) | fused into the loop as a SIMD bool AND accumulator; scalar/MakeVector forms folded | n.a. |
+| MakeVector | bool lists folded into All; float vectors materialized | n.a. |
+
+Codegen fixes the new graphs needed:
+
+- **Integer and bool data in arithmetic.** Integer observations (counts, Bernoulli y) and
+  constant-folded bool masks (e.g. `y == 0` in Poisson) are now packed as float64. Integer
+  arrays used only as gather/scatter indices stay int64.
+- **PyTensor semantics reproduced:**
+  - a nonzero numeric Switch condition is true;
+  - bool operands of float ops are upcast;
+  - Mul/Add of bools are logical and/or.
+- **Bool arrays** that must be materialized are stored as float64 0/1 masks, and views keep
+  the mask flag.
+- **0-d integer constants** are rendered as Float64.
+
+## Accuracy
+
+`bench/phase4_accuracy.py` (also asserted in `tests/test_special.py`):
+
+- Each op is compiled through the `MOJO_ND` backend, so both the SIMD lanes and the scalar
+  tail run.
+- References: a 40-digit `Decimal` implementation (`bench/hiprec_ref.py`; recurrence plus
+  Stirling/asymptotic series with exact Bernoulli numbers, reflection with Decimal sin/cos,
+  erfc continued fraction / Taylor series) for gammaln, psi and erfc; numpy/scipy elsewhere.
+- The last column shows scipy's own error against the high-precision reference.
+
+| op | range | n | reference | max ulp | median ulp | max rel err | scipy vs hi-prec (max rel) |
+|---|---|---|---|---|---|---|---|
+| gammaln | tiny (1e-300..1e-3) | 1000 | 40-digit Decimal | 0 | 0 | 0.00e+00 | 2.21e-16 |
+| gammaln | (1e-3, 50) | 1000 | 40-digit Decimal | 2 | 0 | 3.00e-16 | 1.52e-14 |
+| gammaln | near 1 and 2 (zeros) | 1000 | 40-digit Decimal | 1 | 0 | 2.21e-16 | 1.59e-10 |
+| gammaln | large (50..1e300) | 1000 | 40-digit Decimal | 1 | 0 | 1.67e-16 | 2.11e-16 |
+| gammaln | negative non-integer | 1000 | 40-digit Decimal | 155 | 0 | 3.19e-14 | 4.36e-15 |
+| psi | tiny (1e-300..1e-3) | 1000 | 40-digit Decimal | 1 | 0 | 2.02e-16 | 2.09e-16 |
+| psi | (1e-3, 10) | 1000 | 40-digit Decimal | 15 | 1 | 1.80e-15 | 3.26e-16 |
+| psi | near root 1.4616 | 1000 | 40-digit Decimal | 13 | 1 | 1.75e-15 | 2.21e-16 |
+| psi | very near root (+-1e-8) | 1000 | 40-digit Decimal | 2 | 1 | 4.41e-16 | 2.29e-16 |
+| psi | large (10..1e300) | 1000 | 40-digit Decimal | 0 | 0 | 0.00e+00 | 1.94e-16 |
+| psi | negative, >=1e-3 from poles | 1000 | 40-digit Decimal | 131 | 1 | 2.08e-14 | 3.48e-14 |
+| erf | (-6, 6) | 4000 | scipy.special | 3 | 0 | 4.35e-16 | - |
+| erf | tiny | 4000 | scipy.special | 3 | 0 | 4.11e-16 | - |
+| erfc | (-6, 1) | 1000 | 40-digit Decimal | 3 | 0 | 5.01e-16 | 9.13e-16 |
+| erfc | (1, 5) | 1000 | 40-digit Decimal | 4 | 1 | 6.58e-16 | 2.22e-15 |
+| erfc | deep tail (5, 26.5) | 1000 | 40-digit Decimal | 5 | 1 | 6.26e-16 | 5.68e-14 |
+| expm1 | (-50, 50) | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| expm1 | tiny | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| log1mexp | (-50, -1e-3) | 4000 | numpy | 1 | 0 | 2.21e-16 | - |
+| log1mexp | near 0 (-1e-3..-1e-300) | 4000 | numpy | 1 | 0 | 2.05e-16 | - |
+| log1mexp | around -log 2 | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| pow | x in (1e-3, 100), y in (-10, 10) | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| log (std.math) | (1e-300, 1e300) | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| log (std.math) | near 1 | 4000 | numpy | 1 | 0 | 1.36e-16 | - |
+| log1p (std.math) | (-0.999, 1e10) | 4000 | numpy | 1 | 0 | 2.20e-16 | - |
+| log1p (std.math) | tiny | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+| sqrt (std.math) | (1e-300, 1e300) | 4000 | numpy | 0 | 0 | 0.00e+00 | - |
+
+Reading the table:
+
+- **gammaln (libm `lgamma_r`) is correctly rounded within 1-2 ulp for x > 0, including at its
+  zeros x = 1, 2.** SciPy is not: its relative error near the zeros is 1.6e-10 on this grid,
+  about 3e-9 for \|x - 1\| < 1e-3 and 8.8e-4 for \|x - 1\| < 1e-9. The absolute error is
+  tiny, but scipy cannot serve as the reference there. Negative x reaches 155 ulp (3e-14
+  relative), libm's accuracy there, and it does not arise in these models.
+- **psi is at most 15 ulp (1.8e-15) for x > 0.**
+  - The worst points sit just outside the root window (x ~ 1.75, psi ~ 0.25). There the
+    result is `log(y) - sum(1/k)` with \|result\| ~ 0.1 \|log y\|, so the half-ulp
+    rounding of `log(y)` alone is about 8 ulp. Closing this would need a double-double log.
+  - The compensated recurrence took the worst case from 25 to 13-15 ulp.
+  - The root series keeps 2 ulp within 1e-8 of the root, where a plain recurrence loses all
+    relative accuracy.
+  - Negative x (reflection) gives 2e-14 relative at >= 1e-3 from the poles.
+- **erfc (libm) is at most 5 ulp in the deep tail.** SciPy is about 90x worse there (5.7e-14)
+  and flushes x > 26.55 to 0, where libm returns the correct subnormals.
+- **expm1, pow, log1mexp and std.math log/log1p/sqrt are within 1 ulp.** Of Mojo's `std.math`
+  functions, only `exp` is inaccurate (Phase 1).
+- **Test tolerances** (`tests/test_special.py`): <= 4 ulp for libm-backed ops (erfc <= 6),
+  <= 20 ulp for psi at x > 0, and <= 2e-13 relative for negative x.
+- **Gradients** (grad of gammaln, erf, erfc, expm1, log1mexp, sign, pow with respect to both
+  arguments) match the C backend at rtol 1e-12.
+
+## 3. Census models vs PyMC
+
+**All 26 census models** (14 likelihoods, 12 priors) compile and match PyMC's
+`compile_logp` / `compile_dlogp` at **rtol 1e-10 on 24 points each**
+(`tests/test_phase4_models.py`). No tolerance had to be loosened. Because the generated code
+evaluates the same optimized graph, PyMC's float32-folded constants are reproduced exactly.
+
+## 4. Sampling three representative models
+
+`bench/phase4_sampling.py` (results in `bench/phase4_results.json`): 4 chains, 1000 tune + 1000
+draws, median of 5 runs. nutpie is timed sampler-only. Both sides use nuts-rs 0.18.3 with
+identical settings, and nothing is hand-written: all kernels are generated from the PyMC
+model.
+
+| model | dim | impl | sampler-only s | grad evals | min ESS bulk | ESS/s | max R-hat | divergences | speedup |
+|---|---|---|---|---|---|---|---|---|---|
+| robust StudentT regression, N=5000, K=3, nu free | 6 | generated Mojo + nuts-rs | 0.313 | 38,393 | 2713 | 8.7e3 | 1.0014 | 0 | **2.02x** |
+| | 6 | nutpie (numba) | 0.631 | 38,075 | 2650 | 4.2e3 | 1.0019 | 0 | 1x |
+| Poisson GLM, log link, N=10,000, K=5 | 6 | generated Mojo + nuts-rs | 0.390 | 32,520 | 5005 | 1.3e4 | 1.0023 | 0 | **2.51x** |
+| | 6 | nutpie (numba) | 0.977 | 32,081 | 4993 | 5.1e3 | 1.0029 | 0 | 1x |
+| hierarchical Beta-Binomial, G=200 | 202 | generated Mojo + nuts-rs | 0.131 | 96,777 | 2152 | 1.6e4 | 1.0059 | 0 | **1.65x** |
+| | 202 | nutpie (numba) | 0.217 | 94,551 | 2191 | 1.0e4 | 1.0052 | 0 | 1x |
+
+Kernel-only logp + gradient per evaluation:
+
+| model | generated Mojo | PyTensor numba graph (`jit_fn`, from Python) |
+|---|---|---|
+| robust StudentT, N=5000 | 28.6 us | 82.4 us |
+| Poisson GLM, N=10,000 | 46.4 us | 127 us |
+| Beta-Binomial, G=200 | 3.85 us | 5.25 us (includes about 0.5 us of Python call) |
+
+Posterior checks (`tests/test_phase4_sampling.py`), in the unconstrained space using nutpie's
+`store_unconstrained=True`:
+
+- means within 4.5 combined MCSE (the Beta-Binomial compares 202 coordinates);
+- sds within 20%;
+- R-hat < 1.01 and ESS > 400 for every coordinate;
+- divergence counts comparable.
+
+All three models also match PyMC at rtol 1e-10.
+
+**Why the speedup is 1.6-2.5x here and not the regression's 5.5x.** The per-row work is now a
+transcendental (`exp` in Poisson, `log1p` in StudentT, `lgamma` and `psi` in Beta-Binomial),
+and the generated code evaluates libm one SIMD lane at a time. Measured trade-off on the
+Poisson kernel:
+
+| `exp` implementation | kernel us/eval | max logp rel. error vs PyMC (24 points) |
+|---|---|---|
+| libm per lane (default) | 47.4 | 1.7e-16 |
+| Mojo `std.math.exp`, vectorized (`PYTENSOR_MOJO_STDEXP=1`) | 32.3 | 5.0e-13 |
+
+The vectorized std exp is 1.47x faster but about 1e-12 off per call (Phase 1). It is opt-in;
+an accurate vectorized exp/log1p/lgamma is the next step for these models.
+
+## Surprises and fixes
+
+1. **SciPy `gammaln` near its zeros** is not accurate in relative terms; see the accuracy
+   section. That is why a Decimal reference was needed.
+2. **Plain `lgamma` is not thread-safe** (`signgam`); `lgamma_r` is used instead.
+3. **`signbit` is a macro in libm**, so it cannot go through `external_call`. Signed zero is
+   detected with `1/x`.
+4. **Mojo 1.2 details:**
+   - A bool SIMD splat needs `SIMD[DType.bool, w](fill=True)`.
+   - A comptime list element must be bound with `comptime c = LIST[k]` before runtime use.
+5. **nutpie omits the `unconstrained_posterior` group** when no variable is transformed (as in
+   the Poisson GLM).
+6. **Integer observations and constant-folded bool masks** exercised the Switch, bool-upcast
+   and bool-Mul semantics above. These are silent correctness traps for any new backend, and
+   are now covered by the census tests.
+
+## NOT done in Phase 4
+
+- trigamma / polygamma (only needed for second-order methods), incomplete gamma/beta (CDFs,
+  censoring, truncation), Bessel functions, erfcx.
+- An accurate vectorized exp/log1p/lgamma.
+- Distributions outside the census list (e.g. ZeroInflated*, mixtures, Dirichlet,
+  multivariate, which need linalg).
 
 ---
 

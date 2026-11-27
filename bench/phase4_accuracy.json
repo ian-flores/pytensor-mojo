@@ -1,0 +1,245 @@
+[
+ {
+  "op": "gammaln",
+  "range": "tiny (1e-300..1e-3)",
+  "n": 1000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": 2.206807047133939e-16
+ },
+ {
+  "op": "gammaln",
+  "range": "(1e-3, 50)",
+  "n": 1000,
+  "max_ulp": 2.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.99734582555047e-16,
+  "scipy_rel": 1.5168621471050968e-14
+ },
+ {
+  "op": "gammaln",
+  "range": "near 1 and 2 (zeros)",
+  "n": 1000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.2147779987377812e-16,
+  "scipy_rel": 1.5914253633833494e-10
+ },
+ {
+  "op": "gammaln",
+  "range": "large (50..1e300)",
+  "n": 1000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 1.670311941039784e-16,
+  "scipy_rel": 2.1090461698014857e-16
+ },
+ {
+  "op": "gammaln",
+  "range": "negative non-integer",
+  "n": 1000,
+  "max_ulp": 155.0,
+  "median_ulp": 0.0,
+  "max_rel": 3.192285275748271e-14,
+  "scipy_rel": 4.364377971024201e-15
+ },
+ {
+  "op": "psi",
+  "range": "tiny (1e-300..1e-3)",
+  "n": 1000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.0164425761215658e-16,
+  "scipy_rel": 2.0894043365195491e-16
+ },
+ {
+  "op": "psi",
+  "range": "(1e-3, 10)",
+  "n": 1000,
+  "max_ulp": 15.0,
+  "median_ulp": 1.0,
+  "max_rel": 1.8020996843052454e-15,
+  "scipy_rel": 3.262682511770601e-16
+ },
+ {
+  "op": "psi",
+  "range": "near root 1.4616",
+  "n": 1000,
+  "max_ulp": 13.0,
+  "median_ulp": 1.0,
+  "max_rel": 1.753225834574998e-15,
+  "scipy_rel": 2.211002208316705e-16
+ },
+ {
+  "op": "psi",
+  "range": "very near root (+-1e-8)",
+  "n": 1000,
+  "max_ulp": 2.0,
+  "median_ulp": 1.0,
+  "max_rel": 4.413433936389835e-16,
+  "scipy_rel": 2.294122346394767e-16
+ },
+ {
+  "op": "psi",
+  "range": "large (10..1e300)",
+  "n": 1000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": 1.9433415895849992e-16
+ },
+ {
+  "op": "psi",
+  "range": "negative, >=1e-3 from poles",
+  "n": 1000,
+  "max_ulp": 131.0,
+  "median_ulp": 1.0,
+  "max_rel": 2.077168003055105e-14,
+  "scipy_rel": 3.481272827810858e-14
+ },
+ {
+  "op": "erf",
+  "range": "(-6, 6)",
+  "n": 4000,
+  "max_ulp": 3.0,
+  "median_ulp": 0.0,
+  "max_rel": 4.3476631007905154e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "erf",
+  "range": "tiny",
+  "n": 4000,
+  "max_ulp": 3.0,
+  "median_ulp": 0.0,
+  "max_rel": 4.107553281116752e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "erfc",
+  "range": "(-6, 1)",
+  "n": 1000,
+  "max_ulp": 3.0,
+  "median_ulp": 0.0,
+  "max_rel": 5.006991988647386e-16,
+  "scipy_rel": 9.133309681798916e-16
+ },
+ {
+  "op": "erfc",
+  "range": "(1, 5)",
+  "n": 1000,
+  "max_ulp": 4.0,
+  "median_ulp": 1.0,
+  "max_rel": 6.584467747519509e-16,
+  "scipy_rel": 2.2229447572772996e-15
+ },
+ {
+  "op": "erfc",
+  "range": "deep tail (5, 26.5)",
+  "n": 1000,
+  "max_ulp": 5.0,
+  "median_ulp": 1.0,
+  "max_rel": 6.261560136522179e-16,
+  "scipy_rel": 5.677013161526777e-14
+ },
+ {
+  "op": "expm1",
+  "range": "(-50, 50)",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "expm1",
+  "range": "tiny",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "log1mexp",
+  "range": "(-50, -1e-3)",
+  "n": 4000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.2122364646595093e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "log1mexp",
+  "range": "near 0 (-1e-3..-1e-300)",
+  "n": 4000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.049454298702962e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "log1mexp",
+  "range": "around -log 2",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "pow",
+  "range": "x in (1e-3, 100), y in (-10, 10)",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "log (std.math)",
+  "range": "(1e-300, 1e300)",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "log (std.math)",
+  "range": "near 1",
+  "n": 4000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 1.3610191434913496e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "log1p (std.math)",
+  "range": "(-0.999, 1e10)",
+  "n": 4000,
+  "max_ulp": 1.0,
+  "median_ulp": 0.0,
+  "max_rel": 2.1991929057321359e-16,
+  "scipy_rel": null
+ },
+ {
+  "op": "log1p (std.math)",
+  "range": "tiny",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ },
+ {
+  "op": "sqrt (std.math)",
+  "range": "(1e-300, 1e300)",
+  "n": 4000,
+  "max_ulp": 0.0,
+  "median_ulp": 0.0,
+  "max_rel": 0.0,
+  "scipy_rel": null
+ }
+]
