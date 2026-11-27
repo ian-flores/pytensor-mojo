@@ -25,22 +25,22 @@
 | `EQ` | inline SIMD |
 | `Erf` | libm `erf` per lane |
 | `Erfc` | libm `erfc` per lane |
-| `Exp` | libm `exp` per lane |
-| `Expm1` | libm `expm1` per lane |
+| `Exp` | vectorized fdlibm-style exp (`mojo_math`, <= 1 ulp) |
+| `Expm1` | vectorized fdlibm-style expm1 (`mojo_math`, <= 1 ulp) |
 | `Floor` | libm `floor` per lane |
 | `GE` | inline SIMD |
 | `GT` | inline SIMD |
-| `GammaLn` | libm `lgamma_r` per lane |
+| `GammaLn` | vectorized: Chebyshev kernel at the zeros, recurrence, Stirling (`mojo_math`); libm for x <= 0 |
 | `Identity` | inline SIMD |
 | `Invert` | inline SIMD |
 | `IsInf` | inline SIMD |
 | `IsNan` | inline SIMD |
 | `LE` | inline SIMD |
 | `LT` | inline SIMD |
-| `Log` | Mojo `std.math`, SIMD (accuracy-tested, <= 1 ulp) |
+| `Log` | vectorized fdlibm-style log (`mojo_math`, <= 1 ulp) |
 | `Log10` | libm `log10` per lane |
 | `Log1mexp` | Maechler (2012) piecewise, libm |
-| `Log1p` | Mojo `std.math`, SIMD (accuracy-tested, <= 1 ulp) |
+| `Log1p` | vectorized fdlibm-style log1p (`mojo_math`, <= 1 ulp) |
 | `Log2` | libm `log2` per lane |
 | `Maximum` | inline SIMD |
 | `Minimum` | inline SIMD |
@@ -51,10 +51,10 @@
 | `Pow` | libm `pow` per lane |
 | `Psi` | own implementation (reflection, root Taylor series, compensated recurrence + asymptotic) |
 | `Reciprocal` | inline SIMD |
-| `Sigmoid` | libm `exp` per lane (inside formula) |
+| `Sigmoid` | vectorized fdlibm-style exp (`mojo_math`, <= 1 ulp) (inside formula) |
 | `Sign` | inline SIMD |
 | `Sin` | libm `sin` per lane |
-| `Softplus` | libm `exp` per lane (inside formula) |
+| `Softplus` | vectorized fdlibm-style log1p (`mojo_math`, <= 1 ulp) (inside formula) |
 | `Sqr` | inline SIMD |
 | `Sqrt` | Mojo `std.math`, SIMD (accuracy-tested, <= 1 ulp) |
 | `Sub` | inline SIMD |

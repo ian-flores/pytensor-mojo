@@ -45,8 +45,8 @@ def grids():
         "log1mexp": [("(-50, -1e-3)", -lg(1e-3, 50)), ("near 0 (-1e-3..-1e-300)", -lg(1e-300, 1e-3)),
                      ("around -log 2", -np.log(2) + g.uniform(-1e-3, 1e-3, 4000))],
         "pow": [("x in (1e-3, 100), y in (-10, 10)", None)],
-        "log (std.math)": [("(1e-300, 1e300)", lg(1e-300, 1e300)), ("near 1", 1 + g.uniform(-1e-3, 1e-3, 4000))],
-        "log1p (std.math)": [("(-0.999, 1e10)", np.concatenate([g.uniform(-0.999, 1, 2000), lg(1, 1e10, 2000)])),
+        "log": [("(1e-300, 1e300)", lg(1e-300, 1e300)), ("near 1", 1 + g.uniform(-1e-3, 1e-3, 4000))],
+        "log1p": [("(-0.999, 1e10)", np.concatenate([g.uniform(-0.999, 1, 2000), lg(1, 1e10, 2000)])),
                              ("tiny", lg(1e-300, 1e-5) * np.sign(g.normal(size=4000)))],
         "sqrt (std.math)": [("(1e-300, 1e300)", lg(1e-300, 1e300))],
     }
@@ -56,8 +56,8 @@ def ref(name, x, y=None):
     return {"gammaln": lambda: sc.gammaln(x), "psi": lambda: sc.psi(x), "erf": lambda: sc.erf(x),
             "erfc": lambda: sc.erfc(x), "expm1": lambda: np.expm1(x),
             "log1mexp": lambda: np.log(-np.expm1(x)) if False else _log1mexp_ref(x),
-            "pow": lambda: np.power(x, y), "log (std.math)": lambda: np.log(x),
-            "log1p (std.math)": lambda: np.log1p(x), "sqrt (std.math)": lambda: np.sqrt(x)}[name]()
+            "pow": lambda: np.power(x, y), "log": lambda: np.log(x),
+            "log1p": lambda: np.log1p(x), "sqrt (std.math)": lambda: np.sqrt(x)}[name]()
 
 
 def _log1mexp_ref(x):
@@ -68,7 +68,7 @@ def _log1mexp_ref(x):
 
 def sym(name, x, y=None):
     return {"gammaln": pt.gammaln, "psi": pt.psi, "erf": pt.erf, "erfc": pt.erfc, "expm1": pt.expm1,
-            "log1mexp": pt.log1mexp, "log (std.math)": pt.log, "log1p (std.math)": pt.log1p,
+            "log1mexp": pt.log1mexp, "log": pt.log, "log1p": pt.log1p,
             "sqrt (std.math)": pt.sqrt}[name](x) if name != "pow" else x ** y
 
 
@@ -127,7 +127,7 @@ def main():
     print("| op | range | n | reference | max ulp | median ulp | max rel err | scipy vs hi-prec (max rel) |")
     print("|---|---|---|---|---|---|---|---|")
     for name, label, n, mu, md, mr, sr in rows:
-        refname = "40-digit Decimal" if sr is not None else ("numpy" if name in ("expm1", "pow", "log1mexp") or "std.math" in name else "scipy.special")
+        refname = "40-digit Decimal" if sr is not None else ("numpy" if name in ("expm1", "pow", "log1mexp") or name in ("log", "log1p") or "std.math" in name else "scipy.special")
         srs = f"{sr:.2e}" if sr is not None else "-"
         print(f"| {name} | {label} | {n} | {refname} | {mu:.3g} | {md:.3g} | {mr:.2e} | {srs} |")
 

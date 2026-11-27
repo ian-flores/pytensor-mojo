@@ -14,30 +14,30 @@
 <line x1="680.0" y1="24" x2="680.0" y2="230" stroke="#dcc8a4"/>
 <text x="680.0" y="246" font-size="11" fill="#2b1f12" text-anchor="middle">1000</text>
 <text x="180" y="45" font-size="11.5" fill="#2b1f12" text-anchor="end">HLR N=10k</text>
-<rect x="190" y="30" width="323.4" height="12" fill="#bf5a36"/>
-<text x="519.4" y="40" font-size="10" fill="#2b1f12">19.9 us</text>
-<rect x="190" y="44" width="400.5" height="12" fill="#3f5d72"/>
-<text x="596.5" y="54" font-size="10" fill="#2b1f12">122 us</text>
+<rect x="190" y="30" width="322.0" height="12" fill="#bf5a36"/>
+<text x="518.0" y="40" font-size="10" fill="#2b1f12">19.3 us</text>
+<rect x="190" y="44" width="399.0" height="12" fill="#3f5d72"/>
+<text x="595.0" y="54" font-size="10" fill="#2b1f12">118 us</text>
 <text x="180" y="83" font-size="11.5" fill="#2b1f12" text-anchor="end">Poisson GLM N=10k</text>
-<rect x="190" y="68" width="359.3" height="12" fill="#bf5a36"/>
-<text x="555.3" y="78" font-size="10" fill="#2b1f12">46.4 us</text>
-<rect x="190" y="82" width="402.2" height="12" fill="#3f5d72"/>
-<text x="598.2" y="92" font-size="10" fill="#2b1f12">127 us</text>
+<rect x="190" y="68" width="350.4" height="12" fill="#bf5a36"/>
+<text x="546.4" y="78" font-size="10" fill="#2b1f12">37.7 us</text>
+<rect x="190" y="82" width="403.0" height="12" fill="#3f5d72"/>
+<text x="599.0" y="92" font-size="10" fill="#2b1f12">129 us</text>
 <text x="180" y="121" font-size="11.5" fill="#2b1f12" text-anchor="end">StudentT reg. N=5k</text>
-<rect x="190" y="106" width="338.7" height="12" fill="#bf5a36"/>
-<text x="534.7" y="116" font-size="10" fill="#2b1f12">28.6 us</text>
-<rect x="190" y="120" width="383.8" height="12" fill="#3f5d72"/>
-<text x="579.8" y="130" font-size="10" fill="#2b1f12">82.4 us</text>
+<rect x="190" y="106" width="330.9" height="12" fill="#bf5a36"/>
+<text x="526.9" y="116" font-size="10" fill="#2b1f12">23.8 us</text>
+<rect x="190" y="120" width="384.1" height="12" fill="#3f5d72"/>
+<text x="580.1" y="130" font-size="10" fill="#2b1f12">83 us</text>
 <text x="180" y="159" font-size="11.5" fill="#2b1f12" text-anchor="end">Beta-Binomial G=200</text>
-<rect x="190" y="144" width="253.3" height="12" fill="#bf5a36"/>
-<text x="449.3" y="154" font-size="10" fill="#2b1f12">3.85 us</text>
-<rect x="190" y="158" width="266.6" height="12" fill="#3f5d72"/>
-<text x="462.6" y="168" font-size="10" fill="#2b1f12">5.25 us</text>
+<rect x="190" y="144" width="235.0" height="12" fill="#bf5a36"/>
+<text x="431.0" y="154" font-size="10" fill="#2b1f12">2.5 us</text>
+<rect x="190" y="158" width="266.7" height="12" fill="#3f5d72"/>
+<text x="462.7" y="168" font-size="10" fill="#2b1f12">5.26 us</text>
 <text x="180" y="197" font-size="11.5" fill="#2b1f12" text-anchor="end">Eight schools</text>
-<rect x="190" y="182" width="68.5" height="12" fill="#bf5a36"/>
-<text x="264.5" y="192" font-size="10" fill="#2b1f12">0.05 us</text>
-<rect x="190" y="196" width="191.6" height="12" fill="#3f5d72"/>
-<text x="387.6" y="206" font-size="10" fill="#2b1f12">0.902 us</text>
+<rect x="190" y="182" width="70.4" height="12" fill="#bf5a36"/>
+<text x="266.4" y="192" font-size="10" fill="#2b1f12">0.0523 us</text>
+<rect x="190" y="196" width="191.3" height="12" fill="#3f5d72"/>
+<text x="387.3" y="206" font-size="10" fill="#2b1f12">0.895 us</text>
 <rect x="190" y="253" width="10" height="10" fill="#bf5a36"/><text x="204" y="262" font-size="10.5" fill="#2b1f12">generated Mojo (from Rust)</text>
 <rect x="400" y="253" width="10" height="10" fill="#3f5d72"/><text x="414" y="262" font-size="10.5" fill="#2b1f12">PyTensor numba graph (from Python)</text>
 <text x="680" y="16" font-size="10.5" fill="#2b1f12" text-anchor="end">us / evaluation, log scale</text>

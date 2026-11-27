@@ -47,6 +47,8 @@ from pytensor.graph.basic import Constant
 from pytensor.raise_op import CheckAndRaise
 from pytensor.scalar import basic as ps
 from pytensor.scalar import math as psm
+
+from . import mojo_math as mm
 from pytensor.tensor.basic import Alloc, Join, MakeVector, ScalarFromTensor, TensorFromScalar
 from pytensor.tensor.elemwise import CAReduce, DimShuffle, Elemwise
 from pytensor.tensor.math import Dot, Sum
@@ -61,8 +63,8 @@ CACHE = pathlib.Path(os.environ.get("PYTENSOR_MOJO_CACHE", pathlib.Path(__file__
 W = int(os.environ.get("PYTENSOR_MOJO_SIMD", "8"))
 # Opt-in: x / splat(s) -> x * splat(1 / s) inside SIMD loops (changes rounding by <= 1-2 ulp).
 RECIP = os.environ.get("PYTENSOR_MOJO_RECIP", "0") == "1"
-# Opt-in: vectorized std.math.exp instead of per-lane libm exp (~1e-12 relative error in Mojo 1.2).
-STDEXP = os.environ.get("PYTENSOR_MOJO_STDEXP", "0") == "1"
+# exp/log/log1p/expm1/gammaln come from pytensor_mojo.mojo_math (vectorized; PYTENSOR_MOJO_LIBM=1
+# switches them back to per-lane libm). PYTENSOR_MOJO_STDEXP is retired (Mojo std exp ~1e-12 rel).
 
 MTYPE = {"float64": "Float64", "int64": "Int64", "bool": "Bool"}
 DT = {"float64": "DType.float64", "int64": "DType.int64", "bool": "DType.bool"}
@@ -165,16 +167,16 @@ def _sop_table(w):
         ps.Neg: lambda a: f"(-{a})",
         ps.Sqr: lambda a: f"({a} * {a})",
         ps.Sqrt: lambda a: f"sqrt({a})",
-        ps.Exp: lambda a: f"vexp[{w}]({a})",
-        ps.Log: lambda a: f"log({a})",
-        ps.Log1p: lambda a: f"log1p({a})",
+        ps.Exp: lambda a: mm.call("exp", w, a),
+        ps.Log: lambda a: mm.call("log", w, a),
+        ps.Log1p: lambda a: mm.call("log1p", w, a),
         ps.Reciprocal: lambda a: f"({F}(1.0) / {a})",
         ps.Identity: lambda a: a,
         ps.Abs: lambda a: f"abs({a})",
         ps.Maximum: lambda a, b: f"max({a}, {b})",
         ps.Minimum: lambda a, b: f"min({a}, {b})",
-        psm.Sigmoid: lambda a: f"({F}(1.0) / ({F}(1.0) + vexp[{w}](-{a})))",
-        psm.Softplus: lambda a: f"(max({a}, {F}(0.0)) + log1p(vexp[{w}](-abs({a}))))",
+        psm.Sigmoid: lambda a: f"({F}(1.0) / ({F}(1.0) + {mm.call('exp', w, '-' + a)}))",
+        psm.Softplus: lambda a: f"(max({a}, {F}(0.0)) + {mm.call('log1p', w, mm.call('exp', w, '-abs(' + a + ')'))})",
         ps.GE: lambda a, b: f"{a}.ge({b})",
         ps.GT: lambda a, b: f"{a}.gt({b})",
         ps.LE: lambda a, b: f"{a}.le({b})",
@@ -186,16 +188,16 @@ def _sop_table(w):
         ps.Invert: lambda a: f"(~{a})",
         ps.Switch: lambda c, a, b: f"{c}.select({a}, {b})",
         # Phase 4 special functions
-        psm.GammaLn: lambda a: f"vlgamma[{w}]({a})",
+        psm.GammaLn: lambda a: mm.call("gammaln", w, a),
         psm.Psi: lambda a: f"vpsi[{w}]({a})",
         psm.Erf: lambda a: f'vlibm1["erf", {w}]({a})',
         psm.Erfc: lambda a: f'vlibm1["erfc", {w}]({a})',
-        ps.Expm1: lambda a: f'vlibm1["expm1", {w}]({a})',
+        ps.Expm1: lambda a: mm.call("expm1", w, a),
         psm.Log1mexp: lambda a: f"vlog1mexp[{w}]({a})",
         ps.Pow: lambda a, b: f"vpow[{w}]({a}, {b})",
         ps.Sign: lambda a: f"vsign[{w}]({a})",
         ps.IsInf: lambda a: f"({a}.eq(SIMD[DType.float64, {w}](POS_INF)) | {a}.eq(SIMD[DType.float64, {w}](NEG_INF)))",
-        ps.IsNan: lambda a: f"{a}.ne({a})",
+        ps.IsNan: lambda a: f"_isnan[{w}]({a})",   # bit test; SIMD .ne() is ordered
         ps.Floor: lambda a: f'vlibm1["floor", {w}]({a})',
         ps.Ceil: lambda a: f'vlibm1["ceil", {w}]({a})',
         ps.Log2: lambda a: f'vlibm1["log2", {w}]({a})',
@@ -1370,11 +1372,7 @@ def build_library(fgraph, name, flat_input_dim=None, simd=W):
     cg = Codegen(fgraph, name, simd)
     body = cg.generate()
     nin = len(fgraph.inputs)
-    src = HEADER.replace("{W}", str(simd))
-    if STDEXP:
-        src = src.replace("def vexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:",
-                          "def vexp[w: Int](x: SIMD[DType.float64, w]) -> SIMD[DType.float64, w]:\n    return std_exp(x)", 1)
-        src = src.replace("from std.math import log, log1p, sqrt", "from std.math import log, log1p, sqrt\nfrom std.math import exp as std_exp", 1)
+    src = HEADER.replace("{W}", str(simd)) + mm.prelude()
     src += f"\ndef _run_{name}(tab: Pointer[Int64, MutAnyOrigin], shp: Pointer[Int64, MutAnyOrigin]) -> Int32:\n" + body
     src += f"""
 

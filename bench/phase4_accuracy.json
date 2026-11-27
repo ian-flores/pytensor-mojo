@@ -14,16 +14,16 @@
   "n": 1000,
   "max_ulp": 2.0,
   "median_ulp": 0.0,
-  "max_rel": 2.99734582555047e-16,
+  "max_rel": 2.8005460499955236e-16,
   "scipy_rel": 1.5168621471050968e-14
  },
  {
   "op": "gammaln",
   "range": "near 1 and 2 (zeros)",
   "n": 1000,
-  "max_ulp": 1.0,
-  "median_ulp": 0.0,
-  "max_rel": 2.2147779987377812e-16,
+  "max_ulp": 3.0,
+  "median_ulp": 1.0,
+  "max_rel": 4.10385469149373e-16,
   "scipy_rel": 1.5914253633833494e-10
  },
  {
@@ -32,7 +32,7 @@
   "n": 1000,
   "max_ulp": 1.0,
   "median_ulp": 0.0,
-  "max_rel": 1.670311941039784e-16,
+  "max_rel": 1.7449760803742846e-16,
   "scipy_rel": 2.1090461698014857e-16
  },
  {
@@ -147,9 +147,9 @@
   "op": "expm1",
   "range": "(-50, 50)",
   "n": 4000,
-  "max_ulp": 0.0,
+  "max_ulp": 1.0,
   "median_ulp": 0.0,
-  "max_rel": 0.0,
+  "max_rel": 2.2068629584769055e-16,
   "scipy_rel": null
  },
  {
@@ -198,7 +198,7 @@
   "scipy_rel": null
  },
  {
-  "op": "log (std.math)",
+  "op": "log",
   "range": "(1e-300, 1e300)",
   "n": 4000,
   "max_ulp": 0.0,
@@ -207,7 +207,7 @@
   "scipy_rel": null
  },
  {
-  "op": "log (std.math)",
+  "op": "log",
   "range": "near 1",
   "n": 4000,
   "max_ulp": 1.0,
@@ -216,16 +216,16 @@
   "scipy_rel": null
  },
  {
-  "op": "log1p (std.math)",
+  "op": "log1p",
   "range": "(-0.999, 1e10)",
   "n": 4000,
   "max_ulp": 1.0,
   "median_ulp": 0.0,
-  "max_rel": 2.1991929057321359e-16,
+  "max_rel": 2.1986970073963854e-16,
   "scipy_rel": null
  },
  {
-  "op": "log1p (std.math)",
+  "op": "log1p",
   "range": "tiny",
   "n": 4000,
   "max_ulp": 0.0,

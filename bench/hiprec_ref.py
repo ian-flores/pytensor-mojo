@@ -81,10 +81,12 @@ def _psi_dec_pos(y):
 
 
 def _lgamma_dec_pos(y):
-    acc = Decimal(0)
+    # lgamma(y) = lgamma(y + n) - ln(y (y + 1) ... (y + n - 1)); one ln of the product
+    prod = Decimal(1)
     while y < SHIFT:
-        acc += y.ln()
+        prod *= y
         y += 1
+    acc = prod.ln()
     s = (y - Decimal("0.5")) * y.ln() - y + _HALF_LN_2PI
     for k, b in _B2K:
         s += b / (2 * k * (2 * k - 1) * y ** (2 * k - 1))
@@ -136,3 +138,47 @@ def erfc_dec_any(x: float) -> float:
         n += 1
         term *= -d * d / n
     return float(1 - 2 / _PI.sqrt() * s)
+
+
+# ---- Phase 7 references (Decimal-valued, for ulp measurement) ---------------------------
+_TINY = Decimal("1e-5")
+
+
+def exp_D(x: float) -> Decimal:
+    return Decimal(x).exp()
+
+
+def log_D(x: float) -> Decimal:
+    return Decimal(x).ln()
+
+
+def log1p_D(x: float) -> Decimal:
+    d = Decimal(x)
+    if abs(d) < _TINY:              # 1 + x would need hundreds of digits for tiny x
+        s, term, n = Decimal(0), d, 1
+        while abs(term) > abs(d) * Decimal(10) ** -42:
+            s += term / n
+            n += 1
+            term *= -d
+        return s
+    return (1 + d).ln()
+
+
+def expm1_D(x: float) -> Decimal:
+    d = Decimal(x)
+    if abs(d) < _TINY:
+        s, term, n = Decimal(0), d, 1
+        while abs(term) > abs(d) * Decimal(10) ** -42:
+            s += term
+            n += 1
+            term *= d / n
+        return s
+    return d.exp() - 1
+
+
+def lgamma_D(x: float) -> Decimal:
+    d = Decimal(x)
+    if d > 0:
+        return _lgamma_dec_pos(d)
+    s, _ = _sincos_pi(d)
+    return (_PI / abs(s)).ln() - _lgamma_dec_pos(1 - d)
