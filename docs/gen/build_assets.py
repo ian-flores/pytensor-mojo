@@ -7,6 +7,8 @@ Writes into docs/_generated/:
   accuracy7_spec.md     vectorized exp/log/log1p/expm1/lgamma accuracy (10M points each)
   kernels7_spec.md      kernel time, libm per lane vs vectorized transcendentals
   supported_ops.md      tensor and scalar op tables, read from ndcodegen's dispatch and op table
+                        (and the extension ops in ndcodegen_ext)
+  posteriordb_*.md      posteriordb coverage and missing-op ranking, from bench/posteriordb_results.json
   distributions.md      distribution / transform table, from the Phase 4 census (missing_ops)
   fig-speedup.svg       Figure: sampling speedup vs nutpie, per model (min..max whiskers)
   fig-kernel.svg        Figure: logp+grad time per evaluation, generated Mojo vs numba graph
@@ -204,7 +206,8 @@ def _impl_of(fn, arity):
 def supported_ops():
     sys.path.insert(0, str(ROOT))
     from pytensor_mojo import ndcodegen as nd
-    tbl = nd._sop_table("1")
+    from pytensor_mojo import ndcodegen_ext as ext
+    tbl = {**nd._sop_table("1"), **ext.scalar_table("1")}
     rows = []
     for cls, fn in tbl.items():
         ar = fn.__code__.co_argcount if fn.__code__.co_argcount else 2
@@ -217,8 +220,23 @@ def supported_ops():
     if missing:
         raise SystemExit(f"add TENSOR_NOTES for: {missing}")
     out = ["| Tensor op | Notes |", "|---|---|"] + [f"| `{t}` | {TENSOR_NOTES[t]} |" for t in tensor]
+    out += [f"| `{t}` | {n} |" for t, n in sorted(ext.TENSOR_NOTES.items())]
     out += ["", "| Scalar op | Implementation |", "|---|---|"] + [f"| `{n}` | {i} |" for n, i in rows]
     return "\n".join(out) + "\n"
+
+
+def posteriordb_tables():
+    """Coverage and missing-op ranking tables from bench/posteriordb_results.json."""
+    import importlib.util
+    import json
+    res = BENCH / "posteriordb_results.json"
+    if not res.exists():
+        return {}
+    spec = importlib.util.spec_from_file_location("pdb_sweep", BENCH / "posteriordb" / "sweep.py")
+    sw = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sw)
+    results = json.loads(res.read_text())["results"]
+    return {"posteriordb_coverage.md": sw.coverage_table(results), "posteriordb_ranking.md": sw.ranking(results)}
 
 
 def distributions():
@@ -335,6 +353,7 @@ def build():
         "kernels7_spec.md": kernels7_spec(),
         "supported_ops.md": supported_ops(),
         "distributions.md": distributions(),
+        **posteriordb_tables(),
         "fig-speedup.svg": fig_speedup(models),
         "fig-kernel.svg": fig_kernel(models),
         "fig-arch.svg": fig_arch(),

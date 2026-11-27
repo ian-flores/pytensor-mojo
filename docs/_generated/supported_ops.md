@@ -14,6 +14,13 @@
 | `Subtensor` | view, constant integer index or slice (step 1) |
 | `Sum` | all axes or given axes; fused as a SIMD accumulator when it consumes a 1-D loop |
 | `TensorFromScalar` | view |
+| `All (N-d)` | AND over a materialized bool array of ndim >= 2 (`ndcodegen_ext`) |
+| `AllocEmpty` | zero-filled workspace (`ndcodegen_ext`) |
+| `CAReduce[Maximum/Minimum]` | max / min over all or some axes (`ndcodegen_ext`) |
+| `CumOp` | cumsum / cumprod along one axis or flattened (`ndcodegen_ext`) |
+| `IncSubtensor` | set/inc into a copy of the base, constant int indices and constant slices (`ndcodegen_ext`) |
+| `SpecifyShape` | no-op view (`ndcodegen_ext`) |
+| `Subtensor (stepped)` | non-unit constant step on static dims, as a strided view (`ndcodegen_ext`) |
 
 | Scalar op | Implementation |
 |---|---|
@@ -51,6 +58,7 @@
 | `Pow` | libm `pow` per lane |
 | `Psi` | own implementation (reflection, root Taylor series, compensated recurrence + asymptotic) |
 | `Reciprocal` | inline SIMD |
+| `Second` | inline SIMD |
 | `Sigmoid` | vectorized fdlibm-style exp (`mojo_math`, <= 1 ulp) (inside formula) |
 | `Sign` | inline SIMD |
 | `Sin` | libm `sin` per lane |

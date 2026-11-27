@@ -94,6 +94,7 @@ nav:
   - Benchmarks:
       - Sampling performance: benchmarks.md
       - Special-function accuracy: accuracy.md
+      - posteriordb sweep: benchmarks/posteriordb.md
   - Project:
       - Limitations and roadmap: limitations.md
       - Upstream issues: upstream-issues.md

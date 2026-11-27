@@ -16,3 +16,6 @@ gpu/eight_schools_gpu
 
 # OS cruft
 .DS_Store
+
+# downloaded benchmark data (posteriordb)
+.cache/

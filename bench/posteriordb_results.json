@@ -1,0 +1,1609 @@
+{
+ "meta": {
+  "chains": 4,
+  "tune": 1000,
+  "draws": 1000,
+  "seed": 1,
+  "z_tol": 4.5,
+  "rtol": 1e-10,
+  "n_points": 20,
+  "reps": 3,
+  "timing": "sampler only, median of reps: mojo-nuts sample_seconds vs nutpie.sample(return_raw_trace=True) wall time",
+  "sampled": true,
+  "rhat_tol": 1.05
+ },
+ "results": [
+  {
+   "posterior": "Rate_1_data-Rate_1_model",
+   "family": "GLM (binomial)",
+   "notes": [],
+   "symbol": "pdb_rate1model",
+   "dim": 1,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.10010174999479204,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 7.917289598752927e-16,
+    "max_rel_err_grad": 1.4684509085291123e-14
+   },
+   "kernel_us": {
+    "mojo": 0.0255823955,
+    "numba": 0.8022808347595856
+   },
+   "mojo": {
+    "sampler_s": 0.018698208,
+    "sampler_s_runs": [
+     0.018698208,
+     0.015813042,
+     0.023798083
+    ],
+    "wall_s": 0.20109487499576062,
+    "divergences": 0,
+    "n_params": 1,
+    "missing_params": [],
+    "max_z": 0.717282298134076,
+    "worst_param": "theta",
+    "match": true,
+    "max_rhat": 1.0019045856455313,
+    "min_ess_bulk": 1886.8500769069367,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.012294957996346056,
+    "sampler_s_runs": [
+     0.012807207996957004,
+     0.012294957996346056,
+     0.012084790971130133
+    ],
+    "wall_s": 0.07783383398782462,
+    "compile_s": 2.2669185000122525,
+    "divergences": 0,
+    "n_params": 1,
+    "missing_params": [],
+    "max_z": 0.42040195992327256,
+    "worst_param": "theta",
+    "match": true,
+    "max_rhat": 1.000443194991574,
+    "min_ess_bulk": 1582.4077739216889,
+    "means_match": true
+   },
+   "speedup": 0.6575473968599588,
+   "sweep_s": 7.142422292032279
+  },
+  {
+   "posterior": "Rate_3_data-Rate_3_model",
+   "family": "GLM (binomial)",
+   "notes": [],
+   "symbol": "pdb_rate3model",
+   "dim": 1,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.0947114999871701,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 6.871728581877397e-16,
+    "max_rel_err_grad": 1.3987542442316835e-15
+   },
+   "kernel_us": {
+    "mojo": 0.027752958499999997,
+    "numba": 0.849553124862723
+   },
+   "mojo": {
+    "sampler_s": 0.019277125,
+    "sampler_s_runs": [
+     0.019277125,
+     0.025733125,
+     0.014723083
+    ],
+    "wall_s": 0.17811187502229586,
+    "divergences": 0,
+    "n_params": 1,
+    "missing_params": [],
+    "max_z": 0.2689468522801981,
+    "worst_param": "theta",
+    "match": true,
+    "max_rhat": 1.0018350645585332,
+    "min_ess_bulk": 1835.6695862651782,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.010584249976091087,
+    "sampler_s_runs": [
+     0.010704874992370605,
+     0.010584249976091087,
+     0.009500499989371747
+    ],
+    "wall_s": 0.030657250026706606,
+    "compile_s": 0.4537763749831356,
+    "divergences": 0,
+    "n_params": 1,
+    "missing_params": [],
+    "max_z": 0.9070039927243805,
+    "worst_param": "theta",
+    "match": true,
+    "max_rhat": 1.0029284121063786,
+    "min_ess_bulk": 1870.8098048638549,
+    "means_match": true
+   },
+   "speedup": 0.5490574956634399,
+   "sweep_s": 2.79857774998527
+  },
+  {
+   "posterior": "wells_data-wells_dist",
+   "family": "GLM (logistic)",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_wellsdist",
+   "dim": 2,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.032330166024621576,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 3.1898226288793574e-15,
+    "max_rel_err_grad": 3.974444817852909e-15
+   },
+   "kernel_us": {
+    "mojo": 51.0419229,
+    "numba": 59.630737919942476
+   },
+   "mojo": {
+    "sampler_s": 0.472358833,
+    "sampler_s_runs": [
+     0.455840584,
+     0.533803375,
+     0.472358833
+    ],
+    "wall_s": 0.5697488749865443,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 0.8860199077194942,
+    "worst_param": "beta[2]",
+    "match": true,
+    "max_rhat": 1.0015623179895223,
+    "min_ess_bulk": 1000.2235013939119,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.7034674999886192,
+    "sampler_s_runs": [
+     0.7034674999886192,
+     0.8218997499789111,
+     0.6498152499552816
+    ],
+    "wall_s": 0.7041532919974998,
+    "compile_s": 0.9881945000379346,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 0.9234985050316815,
+    "worst_param": "beta[1]",
+    "match": true,
+    "max_rhat": 1.0032509141129233,
+    "min_ess_bulk": 818.9891539871503,
+    "means_match": true
+   },
+   "speedup": 1.4892650477621519,
+   "sweep_s": 68.97053229203448
+  },
+  {
+   "posterior": "nes_logit_data-nes_logit_model",
+   "family": "GLM (logistic)",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform).",
+    "bernoulli_logit_glm(x, alpha, beta) written as Bernoulli(logit_p=alpha + x @ beta)."
+   ],
+   "symbol": "pdb_neslogitmodel",
+   "dim": 2,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.039551333989948034,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 1.1228852180794545e-14,
+    "max_rel_err_grad": 5.1468301820683116e-14
+   },
+   "kernel_us": {
+    "mojo": 20.2487625,
+    "numba": 21.538771665073
+   },
+   "mojo": {
+    "sampler_s": 0.262184375,
+    "sampler_s_runs": [
+     0.263387916,
+     0.262184375,
+     0.259759708
+    ],
+    "wall_s": 0.3894702499965206,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 1.116608164949715,
+    "worst_param": "alpha",
+    "match": true,
+    "max_rhat": 1.0161859654676233,
+    "min_ess_bulk": 596.5925774296916,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.40095220803050324,
+    "sampler_s_runs": [
+     0.39732962497510016,
+     0.40095220803050324,
+     0.41320929100038484
+    ],
+    "wall_s": 0.4173423749743961,
+    "compile_s": 0.6082649169838987,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 0.6486316864908546,
+    "worst_param": "alpha",
+    "match": true,
+    "max_rhat": 1.0060114658746997,
+    "min_ess_bulk": 729.2408194532718,
+    "means_match": true
+   },
+   "speedup": 1.52927575501211,
+   "sweep_s": 26.626894416986033
+  },
+  {
+   "posterior": "dogs-dogs",
+   "family": "GLM (logistic)",
+   "notes": [
+    "n_avoid / n_shock depend only on data: computed in NumPy."
+   ],
+   "symbol": "pdb_dogs",
+   "dim": 3,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.049209500022698194,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 1.622702806689869e-16,
+    "max_rel_err_grad": 9.60929061875668e-16
+   },
+   "kernel_us": {
+    "mojo": 15.9559458,
+    "numba": 15.776508330018258
+   },
+   "mojo": {
+    "sampler_s": 0.241144375,
+    "sampler_s_runs": [
+     0.266510916,
+     0.241144375,
+     0.235647292
+    ],
+    "wall_s": 0.4012010839651339,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 1.1288108785434536,
+    "worst_param": "beta[3]",
+    "match": true,
+    "max_rhat": 1.0069149580278698,
+    "min_ess_bulk": 1267.0623143434884,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.272866791987326,
+    "sampler_s_runs": [
+     0.272866791987326,
+     0.26826516597066075,
+     0.2809938749996945
+    ],
+    "wall_s": 0.2842252919799648,
+    "compile_s": 0.6646532079903409,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 0.6960434450721031,
+    "worst_param": "beta[2]",
+    "match": true,
+    "max_rhat": 1.0073467418604998,
+    "min_ess_bulk": 1002.9231914870909,
+    "means_match": true
+   },
+   "speedup": 1.131549479382739,
+   "sweep_s": 26.066713291045744
+  },
+  {
+   "posterior": "dogs-dogs_hierarchical",
+   "family": "GLM (Bernoulli, power link)",
+   "notes": [
+    "Uniform(0, 1) for <lower=0, upper=1> with no prior (same logit transform).",
+    "prev_shock / prev_avoid computed in NumPy."
+   ],
+   "symbol": "pdb_dogshierarchical",
+   "dim": 2,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.13422916701529175,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 2.7102486958473956e-15,
+    "max_rel_err_grad": 2.7683982858975952e-15
+   },
+   "kernel_us": {
+    "mojo": 31.39010835,
+    "numba": 45.057844374969136
+   },
+   "mojo": {
+    "sampler_s": 0.235855541,
+    "sampler_s_runs": [
+     0.238821875,
+     0.235855541,
+     0.230706458
+    ],
+    "wall_s": 0.46476724999956787,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 1.5304009365043285,
+    "worst_param": "a",
+    "match": true,
+    "max_rhat": 1.003257132760743,
+    "min_ess_bulk": 2065.0661266918946,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.2301805829629302,
+    "sampler_s_runs": [
+     0.2301805829629302,
+     0.2310505419736728,
+     0.2252690420136787
+    ],
+    "wall_s": 0.2495990419993177,
+    "compile_s": 0.751149500021711,
+    "divergences": 0,
+    "n_params": 2,
+    "missing_params": [],
+    "max_z": 2.036050355400276,
+    "worst_param": "a",
+    "match": true,
+    "max_rhat": 1.000889674437464,
+    "min_ess_bulk": 2050.330207203815,
+    "means_match": true
+   },
+   "speedup": 0.9759388394565223,
+   "sweep_s": 51.837245458038524
+  },
+  {
+   "posterior": "earnings-logearn_interaction",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_logearninteraction",
+   "dim": 5,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.07344029098749161,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 3.1109972617045406e-15,
+    "max_rel_err_grad": 1.5345295048373584e-15
+   },
+   "kernel_us": {
+    "mojo": 1.7264187500000001,
+    "numba": 1.8530318749253638
+   },
+   "mojo": {
+    "sampler_s": 0.299803125,
+    "sampler_s_runs": [
+     0.300913959,
+     0.293751417,
+     0.299803125
+    ],
+    "wall_s": 0.4434489579871297,
+    "divergences": 0,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 1.865605153372632,
+    "worst_param": "beta[2]",
+    "match": true,
+    "max_rhat": 1.00736036821903,
+    "min_ess_bulk": 478.39503675994496,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.19249300000956282,
+    "sampler_s_runs": [
+     0.19249300000956282,
+     0.19796312501421198,
+     0.1891857500304468
+    ],
+    "wall_s": 0.22763587499503046,
+    "compile_s": 0.5096674999804236,
+    "divergences": 0,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 0.638358555686857,
+    "worst_param": "sigma",
+    "match": true,
+    "max_rhat": 1.0079428616383315,
+    "min_ess_bulk": 608.2766874292786,
+    "means_match": true
+   },
+   "speedup": 0.6420646883169173,
+   "sweep_s": 5.127217874978669
+  },
+  {
+   "posterior": "earnings-logearn_logheight_male",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_logearnlogheightmale",
+   "dim": 4,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.06952224997803569,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 3.085326342466169e-15,
+    "max_rel_err_grad": 9.666211898735526e-16
+   },
+   "kernel_us": {
+    "mojo": 0.92381665,
+    "numba": 1.678005834983196
+   },
+   "mojo": {
+    "sampler_s": 0.240197792,
+    "sampler_s_runs": [
+     0.248888541,
+     0.238041041,
+     0.240197792
+    ],
+    "wall_s": 0.4097018750035204,
+    "divergences": 0,
+    "n_params": 4,
+    "missing_params": [],
+    "max_z": 0.5933784529715111,
+    "worst_param": "beta[3]",
+    "match": true,
+    "max_rhat": 1.0164133949239809,
+    "min_ess_bulk": 360.0653811269557,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.20723233401076868,
+    "sampler_s_runs": [
+     0.20416391600156203,
+     0.20723233401076868,
+     0.2523862079833634
+    ],
+    "wall_s": 0.22054233396193013,
+    "compile_s": 0.5005498339887708,
+    "divergences": 0,
+    "n_params": 4,
+    "missing_params": [],
+    "max_z": 1.1454837387406418,
+    "worst_param": "beta[1]",
+    "match": true,
+    "max_rhat": 1.006494168136193,
+    "min_ess_bulk": 458.3787196349741,
+    "means_match": true
+   },
+   "speedup": 0.8627570315499349,
+   "sweep_s": 5.119249250041321
+  },
+  {
+   "posterior": "kidiq-kidscore_momhsiq",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform).",
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_kidscoremomhsiq",
+   "dim": 4,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.08265549998031929,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 1.4261480645096731e-15,
+    "max_rel_err_grad": 6.645804072819275e-16
+   },
+   "kernel_us": {
+    "mojo": 0.35685,
+    "numba": 1.2790022950503044
+   },
+   "mojo": {
+    "sampler_s": 0.03398375,
+    "sampler_s_runs": [
+     0.052497875,
+     0.03398375,
+     0.032802125
+    ],
+    "wall_s": 0.2610769579769112,
+    "divergences": 0,
+    "n_params": 4,
+    "missing_params": [],
+    "max_z": 1.3914214572117456,
+    "worst_param": "beta[2]",
+    "match": true,
+    "max_rhat": 1.0048881790739248,
+    "min_ess_bulk": 681.1791517738163,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.030886541993822902,
+    "sampler_s_runs": [
+     0.029852542036678642,
+     0.030886541993822902,
+     0.0317902080132626
+    ],
+    "wall_s": 0.05021000001579523,
+    "compile_s": 0.7075561250094324,
+    "divergences": 0,
+    "n_params": 4,
+    "missing_params": [],
+    "max_z": 1.173237391556356,
+    "worst_param": "beta[2]",
+    "match": true,
+    "max_rhat": 1.0078081307684401,
+    "min_ess_bulk": 612.6148690659942,
+    "means_match": true
+   },
+   "speedup": 0.908862088316413,
+   "sweep_s": 3.707468750013504
+  },
+  {
+   "posterior": "kidiq_with_mom_work-kidscore_interaction_c",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_kidscoreinteractionc",
+   "dim": 5,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.1635147089837119,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 1.7474140021922468e-15,
+    "max_rel_err_grad": 9.690595723189017e-16
+   },
+   "kernel_us": {
+    "mojo": 0.583875,
+    "numba": 1.4271162502700463
+   },
+   "mojo": {
+    "sampler_s": 0.026544209,
+    "sampler_s_runs": [
+     0.022727459,
+     0.026544209,
+     0.026689084
+    ],
+    "wall_s": 0.1819858750095591,
+    "divergences": 0,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 1.9425066891848473,
+    "worst_param": "beta[3]",
+    "match": true,
+    "max_rhat": 1.0013574383833017,
+    "min_ess_bulk": 3009.6180814164964,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.01876166695728898,
+    "sampler_s_runs": [
+     0.01840808300767094,
+     0.01876166695728898,
+     0.02274699998088181
+    ],
+    "wall_s": 0.04609979101223871,
+    "compile_s": 1.0578976249671541,
+    "divergences": 0,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 1.2152747311921088,
+    "worst_param": "beta[4]",
+    "match": true,
+    "max_rhat": 1.0015240394046556,
+    "min_ess_bulk": 3045.413698470605,
+    "means_match": true
+   },
+   "speedup": 0.7068082894196991,
+   "sweep_s": 4.026721792004537
+  },
+  {
+   "posterior": "kilpisjarvi_mod-kilpisjarvi",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_kilpisjarvi",
+   "dim": 3,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.09395166696049273,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 7.094526427292466e-16,
+    "max_rel_err_grad": 8.140817900509641e-16
+   },
+   "kernel_us": {
+    "mojo": 0.085350479,
+    "numba": 0.9049579201382585
+   },
+   "mojo": {
+    "sampler_s": 0.088540125,
+    "sampler_s_runs": [
+     0.085782667,
+     0.089339,
+     0.088540125
+    ],
+    "wall_s": 0.22634612501133233,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 0.09360401209285629,
+    "worst_param": "sigma",
+    "match": true,
+    "max_rhat": 1.0135295085063467,
+    "min_ess_bulk": 347.6068095751142,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.1201929579838179,
+    "sampler_s_runs": [
+     0.10706687497440726,
+     0.1201929579838179,
+     0.14472608303185552
+    ],
+    "wall_s": 0.13357004098361358,
+    "compile_s": 0.4825121670146473,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 2.1632580487583257,
+    "worst_param": "sigma",
+    "match": true,
+    "max_rhat": 1.0088110915039388,
+    "min_ess_bulk": 275.7109024927414,
+    "means_match": true
+   },
+   "speedup": 1.3574970442363608,
+   "sweep_s": 3.7192256249836646
+  },
+  {
+   "posterior": "mesquite-logmesquite_logvas",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_logmesquitelogvas",
+   "dim": 8,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.10986791597679257,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 7.559170968990937e-16,
+    "max_rel_err_grad": 7.354535003637271e-16
+   },
+   "kernel_us": {
+    "mojo": 0.1677884375,
+    "numba": 1.2764158300706185
+   },
+   "mojo": {
+    "sampler_s": 0.042134833,
+    "sampler_s_runs": [
+     0.0434315,
+     0.042134833,
+     0.040271875
+    ],
+    "wall_s": 0.26634745800402015,
+    "divergences": 0,
+    "n_params": 8,
+    "missing_params": [],
+    "max_z": 2.0805658009508514,
+    "worst_param": "beta[5]",
+    "match": true,
+    "max_rhat": 1.0058286694537266,
+    "min_ess_bulk": 715.408373033466,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.04360033303964883,
+    "sampler_s_runs": [
+     0.0448721669963561,
+     0.04360033303964883,
+     0.039571542001795024
+    ],
+    "wall_s": 0.06127183296484873,
+    "compile_s": 0.7515366669977084,
+    "divergences": 0,
+    "n_params": 8,
+    "missing_params": [],
+    "max_z": 2.229515070252879,
+    "worst_param": "beta[1]",
+    "match": true,
+    "max_rhat": 1.0044696258162267,
+    "min_ess_bulk": 704.4411596616279,
+    "means_match": true
+   },
+   "speedup": 1.0347811996703258,
+   "sweep_s": 4.534308917005546
+  },
+  {
+   "posterior": "nes2000-nes",
+   "family": "linear regression",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform)."
+   ],
+   "symbol": "pdb_nes",
+   "dim": 10,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "IncSubtensor"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.1274758329964243,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 3.252589141262947e-15,
+    "max_rel_err_grad": 1.6727794994913745e-15
+   },
+   "kernel_us": {
+    "mojo": 1.55158125,
+    "numba": 1.9153106250450949
+   },
+   "mojo": {
+    "sampler_s": 0.1161695,
+    "sampler_s_runs": [
+     0.122155583,
+     0.1161695,
+     0.114526917
+    ],
+    "wall_s": 0.3184108749846928,
+    "divergences": 0,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 1.7108379484307232,
+    "worst_param": "beta[7]",
+    "match": true,
+    "max_rhat": 1.0031605614781662,
+    "min_ess_bulk": 1347.8099381589257,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.09175500000128523,
+    "sampler_s_runs": [
+     0.09046637499704957,
+     0.09187204099725932,
+     0.09175500000128523
+    ],
+    "wall_s": 0.11213037499692291,
+    "compile_s": 0.5691675409907475,
+    "divergences": 0,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 1.5798130586897885,
+    "worst_param": "beta[8]",
+    "match": true,
+    "max_rhat": 1.0023926984996872,
+    "min_ess_bulk": 1188.6706857769366,
+    "means_match": true
+   },
+   "speedup": 0.7898372636646042,
+   "sweep_s": 5.219448417017702
+  },
+  {
+   "posterior": "radon_mn-radon_pooled",
+   "family": "linear regression",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_radonpooled",
+   "dim": 3,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.07163195899920538,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 2.455732500097718e-15,
+    "max_rel_err_grad": 2.4450882115017624e-15
+   },
+   "kernel_us": {
+    "mojo": 0.537575,
+    "numba": 1.2364350000279956
+   },
+   "mojo": {
+    "sampler_s": 0.020262875,
+    "sampler_s_runs": [
+     0.020262875,
+     0.020733,
+     0.019312167
+    ],
+    "wall_s": 0.17250920797232538,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 0.9515041227343256,
+    "worst_param": "alpha",
+    "match": true,
+    "max_rhat": 1.0019007922088499,
+    "min_ess_bulk": 4037.8614665833,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.014050957979634404,
+    "sampler_s_runs": [
+     0.014050957979634404,
+     0.013604291016235948,
+     0.018439917010255158
+    ],
+    "wall_s": 0.2298982500215061,
+    "compile_s": 0.52570925001055,
+    "divergences": 0,
+    "n_params": 3,
+    "missing_params": [],
+    "max_z": 1.1943356284580087,
+    "worst_param": "sigma_y",
+    "match": true,
+    "max_rhat": 1.0003340085341261,
+    "min_ess_bulk": 4374.963979434442,
+    "means_match": true
+   },
+   "speedup": 0.693433581346892,
+   "sweep_s": 3.3495048750191927
+  },
+  {
+   "posterior": "sblrc-blr",
+   "family": "linear regression",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_blr",
+   "dim": 6,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.07022762502310798,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 6.053614643002897e-16,
+    "max_rel_err_grad": 8.419583450471697e-15
+   },
+   "kernel_us": {
+    "mojo": 0.60849165,
+    "numba": 1.7327825000393204
+   },
+   "mojo": {
+    "sampler_s": 0.022622875,
+    "sampler_s_runs": [
+     0.021884083,
+     0.022622875,
+     0.0241745
+    ],
+    "wall_s": 0.15677429200150073,
+    "divergences": 0,
+    "n_params": 6,
+    "missing_params": [],
+    "max_z": 1.3155361430441452,
+    "worst_param": "beta[1]",
+    "match": true,
+    "max_rhat": 1.0025324167462137,
+    "min_ess_bulk": 847.8791348800058,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.022664207965135574,
+    "sampler_s_runs": [
+     0.022664207965135574,
+     0.02317262504948303,
+     0.02209870796650648
+    ],
+    "wall_s": 0.04194433300290257,
+    "compile_s": 0.71752208302496,
+    "divergences": 0,
+    "n_params": 6,
+    "missing_params": [],
+    "max_z": 1.646010164805692,
+    "worst_param": "sigma",
+    "match": true,
+    "max_rhat": 1.0042084345628794,
+    "min_ess_bulk": 738.0171520157841,
+    "means_match": true
+   },
+   "speedup": 1.0018270429879303,
+   "sweep_s": 3.9836803340003826
+  },
+  {
+   "posterior": "diamonds-diamonds",
+   "family": "linear regression (K=24, N=5000)",
+   "notes": [
+    "student_t_lpdf(sigma | 3, 0, 10) - student_t_lccdf(0 | 3, 0, 10): HalfStudentT(3, 10) (exact).",
+    "normal_id_glm_lpdf written as Normal(Intercept + Xc @ b, sigma)."
+   ],
+   "symbol": "pdb_diamonds",
+   "dim": 26,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.1043959169765003,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 1.635441068849759e-14,
+    "max_rel_err_grad": 4.171798979395584e-15
+   },
+   "kernel_us": {
+    "mojo": 168.75916454999998,
+    "numba": 47.058166994247586
+   },
+   "mojo": {
+    "sampler_s": 91.213519042,
+    "sampler_s_runs": [
+     91.213519042,
+     91.125086542,
+     92.757843417
+    ],
+    "wall_s": 91.46118320798269,
+    "divergences": 0,
+    "n_params": 26,
+    "missing_params": [],
+    "max_z": 2.510258072097987,
+    "worst_param": "b[7]",
+    "match": true,
+    "max_rhat": 1.0135045217852234,
+    "min_ess_bulk": 393.41943857914146,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 19.374529291002546,
+    "sampler_s_runs": [
+     19.351482458005194,
+     20.384547458030283,
+     19.374529291002546
+    ],
+    "wall_s": 19.073248458036687,
+    "compile_s": 0.6062360840151086,
+    "divergences": 0,
+    "n_params": 26,
+    "missing_params": [],
+    "max_z": 2.263092824436189,
+    "worst_param": "b[8]",
+    "match": true,
+    "max_rhat": 1.0112239746995417,
+    "min_ess_bulk": 401.25272034115073,
+    "means_match": true
+   },
+   "speedup": 0.2124085277543276,
+   "sweep_s": 359.78996833297424
+  },
+  {
+   "posterior": "eight_schools-eight_schools_centered",
+   "family": "hierarchical",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_eightschoolscentered",
+   "dim": 10,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": false,
+   "build_s": 0.07632491702679545,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 2.51757228437736e-16,
+    "max_rel_err_grad": 2.078097739651242e-15
+   },
+   "kernel_us": {
+    "mojo": 0.054800042,
+    "numba": 0.9189795798738487
+   },
+   "mojo": {
+    "sampler_s": 0.020696333,
+    "sampler_s_runs": [
+     0.020696333,
+     0.019322208,
+     0.022625542
+    ],
+    "wall_s": 0.3894121670164168,
+    "divergences": 26,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 1.8803081835917774,
+    "worst_param": "theta[5]",
+    "match": false,
+    "max_rhat": 1.059410302021065,
+    "min_ess_bulk": 70.29536856342341,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.018892083026003093,
+    "sampler_s_runs": [
+     0.018892083026003093,
+     0.020420792046934366,
+     0.017894290969707072
+    ],
+    "wall_s": 0.041860500001348555,
+    "compile_s": 0.4757273329887539,
+    "divergences": 36,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 0.7462643383821292,
+    "worst_param": "tau",
+    "match": true,
+    "max_rhat": 1.0291087254656905,
+    "min_ess_bulk": 81.92554088122826,
+    "means_match": true
+   },
+   "speedup": 0.9128227220736684,
+   "sweep_s": 3.2726466670283116
+  },
+  {
+   "posterior": "eight_schools-eight_schools_noncentered",
+   "family": "hierarchical",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_eightschoolsnoncentered",
+   "dim": 10,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.0668036249699071,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 2.6398244258238026e-16,
+    "max_rel_err_grad": 3.499880996982958e-14
+   },
+   "kernel_us": {
+    "mojo": 0.051042354500000005,
+    "numba": 0.8957039599772543
+   },
+   "mojo": {
+    "sampler_s": 0.018577583,
+    "sampler_s_runs": [
+     0.019062791,
+     0.018577583,
+     0.018414541
+    ],
+    "wall_s": 0.18014912499347702,
+    "divergences": 7,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 1.7146208875691218,
+    "worst_param": "tau",
+    "match": true,
+    "max_rhat": 1.0016296834483445,
+    "min_ess_bulk": 2295.82139927384,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.01533433300210163,
+    "sampler_s_runs": [
+     0.015396457980386913,
+     0.014768166991416365,
+     0.01533433300210163
+    ],
+    "wall_s": 0.03814112499821931,
+    "compile_s": 0.47755862498888746,
+    "divergences": 8,
+    "n_params": 10,
+    "missing_params": [],
+    "max_z": 2.0616107615515307,
+    "worst_param": "theta[3]",
+    "match": true,
+    "max_rhat": 1.0031420189537295,
+    "min_ess_bulk": 2128.25398771801,
+    "means_match": true
+   },
+   "speedup": 0.8254213156846953,
+   "sweep_s": 3.118978208047338
+  },
+  {
+   "posterior": "low_dim_gauss_mix-low_dim_gauss_mix",
+   "family": "mixture",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant).",
+    "log_mix written as logaddexp over a Potential; ordered[2] mu uses PyMC's ordered transform (same as Stan's)."
+   ],
+   "symbol": "pdb_lowdimgaussmix",
+   "dim": 5,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "CumOp",
+    "IncSubtensor",
+    "Second"
+   ],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": false,
+   "build_s": 0.322673249989748,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 3.585988054644185e-16,
+    "max_rel_err_grad": 3.685031727029014e-14
+   },
+   "kernel_us": {
+    "mojo": 10.30337705,
+    "numba": 19.537229999841657
+   },
+   "mojo": {
+    "sampler_s": 0.130206833,
+    "sampler_s_runs": [
+     0.14170625,
+     0.12483475,
+     0.130206833
+    ],
+    "wall_s": 0.41059795900946483,
+    "divergences": 135,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 1.3517760252132578,
+    "worst_param": "theta",
+    "match": false,
+    "max_rhat": 1.5812268181001703,
+    "min_ess_bulk": 6.851431262088739,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.192524540994782,
+    "sampler_s_runs": [
+     0.18554574996232986,
+     0.1929391250014305,
+     0.192524540994782
+    ],
+    "wall_s": 0.20772283297264948,
+    "compile_s": 0.9272023749654181,
+    "divergences": 0,
+    "n_params": 5,
+    "missing_params": [],
+    "max_z": 1.5442373083344165,
+    "worst_param": "theta",
+    "match": true,
+    "max_rhat": 1.0017198637816678,
+    "min_ess_bulk": 2244.905186625282,
+    "means_match": true
+   },
+   "speedup": 1.478605512160656,
+   "sweep_s": 25.24232258403208
+  },
+  {
+   "posterior": "arK-arK",
+   "family": "time series (AR(5))",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant).",
+    "Lagged design matrix built in NumPy (vectorized; same likelihood)."
+   ],
+   "symbol": "pdb_ark",
+   "dim": 7,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.08295345801161602,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 5.142425817801251e-16,
+    "max_rel_err_grad": 2.321569928137864e-15
+   },
+   "kernel_us": {
+    "mojo": 1.20095625,
+    "numba": 2.3326525001903065
+   },
+   "mojo": {
+    "sampler_s": 0.069262625,
+    "sampler_s_runs": [
+     0.06916125,
+     0.06976775,
+     0.069262625
+    ],
+    "wall_s": 0.23464962502475828,
+    "divergences": 0,
+    "n_params": 7,
+    "missing_params": [],
+    "max_z": 2.4591802080608933,
+    "worst_param": "beta[3]",
+    "match": true,
+    "max_rhat": 1.0028287204355024,
+    "min_ess_bulk": 1790.4187534515333,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 0.07877791702048853,
+    "sampler_s_runs": [
+     0.07877791702048853,
+     0.08163724996848032,
+     0.07860399998025969
+    ],
+    "wall_s": 0.10062279197154567,
+    "compile_s": 0.7969859589939006,
+    "divergences": 0,
+    "n_params": 7,
+    "missing_params": [],
+    "max_z": 2.124275478892355,
+    "worst_param": "beta[4]",
+    "match": true,
+    "max_rhat": 1.0038063543111932,
+    "min_ess_bulk": 1727.2166905137499,
+    "means_match": true
+   },
+   "speedup": 1.1373798931312311,
+   "sweep_s": 5.19325662497431
+  },
+  {
+   "posterior": "arma-arma11",
+   "family": "time series (ARMA(1,1))",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant).",
+    "Error recursion written with pytensor.scan; err ~ normal(0, sigma) as a Potential."
+   ],
+   "symbol": "pdb_arma11",
+   "dim": 4,
+   "missing_tensor": [
+    "Scan",
+    "Split"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "IncSubtensor",
+    "Scan",
+    "Split"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 0.15183337504277006
+  },
+  {
+   "posterior": "garch-garch11",
+   "family": "time series (GARCH(1,1))",
+   "notes": [
+    "No prior in Stan: pm.Flat / pm.HalfFlat (improper uniform).",
+    "beta1 <upper=1-alpha1>: Uniform(0, 1 - alpha1) plus Potential log(1 - alpha1) to cancel its density (same interval transform).",
+    "Volatility recursion written with pytensor.scan."
+   ],
+   "symbol": "pdb_garch11",
+   "dim": 4,
+   "missing_tensor": [
+    "Scan",
+    "Split"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "IncSubtensor",
+    "Scan",
+    "SpecifyShape",
+    "Split"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 0.2895532500115223
+  },
+  {
+   "posterior": "hmm_example-hmm_example",
+   "family": "hidden Markov model",
+   "notes": [
+    "simplex[2]: Dirichlet(1, 1) with PyMC's simplex transform (Stan uses stick-breaking; same posterior, different unconstrained space).",
+    "positive_ordered mu written as cumsum(exp(mu_raw__)) with its Jacobian; normal_lpdf terms as Potentials.",
+    "Forward algorithm written with pytensor.scan."
+   ],
+   "symbol": "pdb_hmmexample",
+   "dim": 4,
+   "missing_tensor": [
+    "CAReduce[OR]",
+    "Scan",
+    "Split"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "CAReduce[Maximum]",
+    "CAReduce[OR]",
+    "CumOp",
+    "IncSubtensor",
+    "Scan",
+    "Split",
+    "Second"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 0.32008879096247256
+  },
+  {
+   "posterior": "mcycle_gp-accel_gp",
+   "family": "Gaussian process (basis-function approx.)",
+   "notes": [
+    "student_t_lpdf - student_t_lccdf(0 | ...) on sdgp: HalfStudentT (exact).",
+    "The length-1 vector wrappers vsdgp / vlscale are dropped."
+   ],
+   "symbol": "pdb_accelgp",
+   "dim": 66,
+   "missing_tensor": [],
+   "missing_scalar": [],
+   "baseline_missing": [],
+   "compiles": true,
+   "matches_pymc": true,
+   "matches_reference": true,
+   "build_s": 0.24709375004749745,
+   "pymc_check": {
+    "match": true,
+    "n_points": 20,
+    "n_finite": 20,
+    "max_rel_err_logp": 5.4741515966487694e-14,
+    "max_rel_err_grad": 1.044844285066718e-13
+   },
+   "kernel_us": {
+    "mojo": 10.96965625,
+    "numba": 5.881562508875504
+   },
+   "mojo": {
+    "sampler_s": 9.971361792,
+    "sampler_s_runs": [
+     10.076139334,
+     9.844893125,
+     9.971361792
+    ],
+    "wall_s": 10.52715141599765,
+    "divergences": 235,
+    "n_params": 66,
+    "missing_params": [],
+    "max_z": 2.0495365155208725,
+    "worst_param": "zgp_1[24]",
+    "match": true,
+    "max_rhat": 1.011339588913016,
+    "min_ess_bulk": 670.0157693278518,
+    "means_match": true
+   },
+   "nutpie": {
+    "sampler_s": 4.39828274998581,
+    "sampler_s_runs": [
+     4.203378542035352,
+     4.39828274998581,
+     4.56911779200891
+    ],
+    "wall_s": 4.184907625021879,
+    "compile_s": 1.1774026249768212,
+    "divergences": 3087,
+    "n_params": 66,
+    "missing_params": [],
+    "max_z": 5.022770198449681,
+    "worst_param": "Intercept",
+    "match": false,
+    "max_rhat": 4.124149412707175,
+    "min_ess_bulk": 4.317951690165695,
+    "means_match": false
+   },
+   "speedup": 0.44109148195931897,
+   "sweep_s": 52.43860716698691
+  },
+  {
+   "posterior": "gp_pois_regr-gp_regr",
+   "family": "Gaussian process (exact)",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant).",
+    "multi_normal_cholesky as MvNormal(chol=cholesky(cov))."
+   ],
+   "symbol": "pdb_gpregr",
+   "dim": 3,
+   "missing_tensor": [
+    "AllocDiag",
+    "Cholesky",
+    "ExtractDiag",
+    "SolveTriangular"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocDiag",
+    "Cholesky",
+    "ExtractDiag",
+    "SolveTriangular"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 0.23870916600571945
+  },
+  {
+   "posterior": "gp_pois_regr-gp_pois_regr",
+   "family": "Gaussian process (latent, Poisson)",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant)."
+   ],
+   "symbol": "pdb_gppoisregr",
+   "dim": 13,
+   "missing_tensor": [
+    "AllocDiag",
+    "Cholesky",
+    "ExtractDiag",
+    "SolveTriangular"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocDiag",
+    "Cholesky",
+    "ExtractDiag",
+    "SolveTriangular"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 0.1585816249717027
+  },
+  {
+   "posterior": "hudson_lynx_hare-lotka_volterra",
+   "family": "ODE (Lotka-Volterra)",
+   "notes": [
+    "integrate_ode_rk45 (adaptive, rtol 1e-5) replaced by fixed-step RK4, 8 steps per year, in pytensor.scan.",
+    "theta <lower=0> with normal priors: Normal(..., transform=log) (Stan's truncation constant omitted)."
+   ],
+   "symbol": "pdb_lotkavolterra",
+   "dim": 8,
+   "missing_tensor": [
+    "Scan"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "IncSubtensor",
+    "Scan"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 4.402669458009768
+  },
+  {
+   "posterior": "one_comp_mm_elim_abs-one_comp_mm_elim_abs",
+   "family": "ODE (pharmacokinetic)",
+   "notes": [
+    "<lower=0> scale with a 0-centred prior: Half* distribution (differs by a constant).",
+    "integrate_ode_bdf replaced by fixed-step RK4, 8 steps per 0.5-day interval, in pytensor.scan."
+   ],
+   "symbol": "pdb_onecompmmelimabs",
+   "dim": 4,
+   "missing_tensor": [
+    "Scan"
+   ],
+   "missing_scalar": [],
+   "baseline_missing": [
+    "AllocEmpty",
+    "IncSubtensor",
+    "Scan"
+   ],
+   "compiles": false,
+   "matches_pymc": false,
+   "matches_reference": null,
+   "sweep_s": 30.768436250044033
+  }
+ ]
+}

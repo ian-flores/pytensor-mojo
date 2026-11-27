@@ -10,6 +10,7 @@ also change the cache key.
 | `PYTENSOR_MOJO_SIMD=N` | 8 | SIMD width of the main loops (float64 lanes) |
 | `PYTENSOR_MOJO_CACHE=DIR` | `pytensor_mojo/__mojocache__` | Location of generated sources and libraries |
 | `PYTENSOR_MOJO_SAMPLER=PATH` | auto | `mojo-nuts` binary used by `pytensor_mojo.sample` |
+| `PYTENSOR_MOJO_NO_EXT=1` | off | Disables the extension ops in `pytensor_mojo/ndcodegen_ext.py` (baseline census) |
 
 `PYTENSOR_MOJO_STDEXP` (rev 0.2-dev, Phase 4) has been retired. It selected Mojo's
 `std.math.exp`, which is fast but has up to 8e-12 relative error. The vectorized `exp` that is
