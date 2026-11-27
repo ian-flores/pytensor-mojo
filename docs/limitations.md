@@ -9,7 +9,7 @@
 | Linear algebra | No BLAS. Unfused `Dot` and axis reductions are scalar loops. No Cholesky, solves or determinants. |
 | Indexing | Gather and scatter are 1-D (`a[idx]`). No multi-dimensional advanced indexing, no `set_subtensor`. |
 | Special functions | No trigamma or polygamma, incomplete gamma or beta, Bessel functions or erfcx. |
-| Transcendentals | Per-lane libm calls. Accurate, but they cap the speedup on `exp`/`log1p`/`lgamma`-heavy models at 1.6-2.5x. |
+| Transcendentals | exp, log, log1p, expm1 and lgamma (x > 0) are vectorized. psi, erf, erfc, pow and trig functions are still per-lane calls; psi appears in gradients that involve gammaln. |
 | Control flow | No `Scan`, no `IfElse`. |
 | Data types | Computation is float64. Integer and bool data are packed as float64, which is exact for these values. |
 | Python path | `MOJO_ND` through `pytensor.function` pays PyTensor's per-call overhead. Sampling should go through the C ABI. |
@@ -18,8 +18,9 @@
 ## Roadmap
 
 1. **Special functions, done in rev 0.2.** gammaln, digamma, erf/erfc, log1mexp, pow, sign and
-   others, with accuracy tests. Next in this area:
-   - an accurate vectorized exp, log1p and lgamma;
+   others, with accuracy tests. Accurate vectorized exp, log, log1p, expm1 and lgamma
+   followed. Next in this area:
+   - a vectorized psi;
    - trigamma;
    - incomplete gamma and beta.
 2. **posteriordb model sweep.** Compile and sample a broad set of reference models, and track

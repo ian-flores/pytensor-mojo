@@ -38,11 +38,11 @@ settings on both sides, 4 chains, 1000 tune + 1000 draws, sampling only, median 
 
 | Model | dim | Mojo + nuts-rs (s) | nutpie (s) | Speedup (median of runs) | Min ESS bulk, Mojo / nutpie |
 |---|---:|---:|---:|---:|---:|
-| Hierarchical linear regression, N=10k, G=20, K=5 | 28 | 0.317 | 1.753 | 5.54x | 7557 / 7880 |
-| Poisson GLM, log link, N=10k, K=5 | 6 | 0.390 | 0.977 | 2.51x | 5005 / 4993 |
-| Robust StudentT regression, N=5000, nu free | 6 | 0.313 | 0.631 | 2.02x | 2713 / 2650 |
-| Hierarchical Beta-Binomial, G=200 | 202 | 0.131 | 0.217 | 1.66x | 2152 / 2191 |
-| Eight schools, non-centered | 10 | 0.0167 | 0.0165 | 1.00x | 2013 / 2192 |
+| Hierarchical linear regression, N=10k, G=20, K=5 | 28 | 0.294 | 1.611 | 5.46x | 7557 / 7880 |
+| Poisson GLM, log link, N=10k, K=5 | 6 | 0.330 | 1.058 | 3.23x | 5005 / 4993 |
+| Robust StudentT regression, N=5000, nu free | 6 | 0.260 | 0.636 | 2.44x | 2773 / 2650 |
+| Hierarchical Beta-Binomial, G=200 | 202 | 0.1000 | 0.213 | 2.12x | 2152 / 2191 |
+| Eight schools, non-centered | 10 | 0.0176 | 0.0148 | 0.86x | 2026 / 2192 |
 The data-bound regression gains the most. Models whose per-row work is `exp`, `log1p` or
 `lgamma` gain less, because those run as libm calls per SIMD lane. Eight schools ties because
 its logp + gradient (about 50 ns) is small next to the sampler's own work per step (about

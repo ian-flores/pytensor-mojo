@@ -13,6 +13,7 @@ Contents:
 - Phase 2: NUTS with no Python in the gradient loop (Mojo C ABI driven by nuts-rs)
 - Phase 3: generated N-d, fused, SIMD code through the same C ABI
 - Phase 4: special functions and common likelihoods (census, accuracy, sampling)
+- Phase 7: SIMD transcendentals (vectorized exp, log, log1p, expm1, lgamma)
 - Caveats across all phases
 - Test record
 
@@ -799,6 +800,115 @@ an accurate vectorized exp/log1p/lgamma is the next step for these models.
 - An accurate vectorized exp/log1p/lgamma.
 - Distributions outside the census list (e.g. ZeroInflated*, mixtures, Dirichlet,
   multivariate, which need linalg).
+
+---
+
+# Phase 7: SIMD transcendentals
+
+Phase 4 left the Poisson, StudentT and Beta-Binomial models at 1.6-2.5x against nutpie,
+because their per-row `exp`, `log1p` and `lgamma` ran as one libm call per SIMD lane. Phase 7
+adds accurate vectorized implementations and makes them the default.
+
+## Implementation (`pytensor_mojo/mojo_math.py`)
+
+The code is a Mojo prelude spliced into every generated file. Its hooks in `ndcodegen.py` are
+small: five op-table entries, plus sigmoid and softplus, route through `mojo_math.call()`. All
+functions are branch-free over `SIMD[DType.float64, w]`, with special cases handled by
+`select`.
+
+| Function | Algorithm |
+|---|---|
+| exp | fdlibm e_exp. Cody-Waite reduction by ln 2; the high part of the split constant has trailing zero bits, so `k ln2_hi` is exact. Remez rational kernel `1 - ((lo - r c / (2 - c)) - hi)`. `2^k` is built from the exponent bits and split into two exact factors, so subnormal results round once. |
+| log | fdlibm e_log. `x = 2^k (1 + f)` with 1 + f in [sqrt(2)/2, sqrt(2)); subnormal inputs are pre-scaled by 2^54. `s = f / (2 + f)` with the Lg1..Lg7 polynomial. |
+| log1p | fdlibm s_log1p. The same kernel on `u = 1 + x`, plus the correction `c / u` for the rounding of u. As in fdlibm, the choice of `c` uses u's raw exponent, from before the sqrt(2) renormalization. The first version used the renormalized exponent and measured 2.05 ulp. |
+| expm1 | fdlibm s_expm1, with its k = 0, +-1, 2..19, 20..56 and far branches all evaluated and selected. |
+| lgamma, x > 0 | **[0.75, 3]:** `(x - 1)(x - 2) g(x)`, where g is a degree-38 Chebyshev interpolant fitted in 40-digit Decimal (`bench/fit_lgamma.py`; coefficients decay to 1e-20). The factors are exact near the zeros, which keeps relative accuracy there. **Below 0.75:** `lgamma(x + 1) - log x`. **(3, 12):** downward recurrence as a product, then one log. **12 and above:** Stirling in the `(x - 1/2)(log x - 1)` form, through B14. x <= 0 lanes call libm `lgamma_r`, and only when some lane needs it. |
+
+Two variants were rejected by measurement:
+
+- **A division-free degree-13 Taylor `exp` kernel.** It had the same accuracy (max 0.86 ulp)
+  but was 13% slower than fdlibm's rational form. The f64 vector divide is not the bottleneck
+  on M1. Interleaved microbenchmark, ns per element: fdlibm rational 1.50, polynomial 1.69,
+  libm per lane 6.45, Mojo `std.math.exp` 1.13 (inaccurate).
+- **Mojo `std.math.exp`.** It has 8e-12 relative error (Phase 1). `PYTENSOR_MOJO_STDEXP` is
+  retired; `PYTENSOR_MOJO_LIBM=1` restores per-lane libm for all five functions.
+
+## Accuracy (10M points per function)
+
+`bench/phase7_accuracy.py` runs each function through the generated SIMD code against the
+40-digit Decimal reference, using all cores. For tiny |x|, log1p and expm1 use Decimal series,
+because 1 + x would need hundreds of digits. The lgamma reference now uses one log of the
+recurrence product, which is about 10x faster; the zeros x = 1, 2 are compared as exact zeros.
+
+| Function | Points | Max ulp | Mean ulp | Correctly rounded |
+|---|---|---|---|---|
+| exp | 10,000,000 | 0.905 | 0.26 | 81.7-100% by set |
+| log | 10,000,000 | 0.841 | 0.01-0.27 | 88.2-100% |
+| log1p | 10,000,000 | 0.852 | 0.01-0.27 | 88.2-99.97% |
+| expm1 | 10,000,000 | 0.855 | 0.01-0.27 | 87.6-100% |
+| lgamma, x > 0 | 10,002,000 | 3.707 | 0.13-0.53 | 55.9-99.7% |
+
+- **Where the worst cases are.** exp peaks at the reduction boundaries ((k + 1/2) ln 2); log
+  and log1p near sqrt(2)/2; lgamma below x = 1, inside [0.75, 1), where x - 2 is not exact.
+- **Special values.** inf, NaN, signed zero, subnormal inputs and the overflow and underflow
+  thresholds are tested in `tests/test_mojo_math.py::test_special_values`.
+- **Where this differs from SciPy.** `gammaln(-inf)` is +inf, as in C99 and libm, where SciPy
+  gives -inf. `gammaln` of subnormal inputs is the correct `-log x`, where SciPy gives inf.
+
+## Found along the way: SIMD `.ne()` is ordered in Mojo 1.2
+
+`x.ne(x)` is False for NaN, unlike IEEE `!=`. The first NaN tests passed NaN through as a finite
+number, and the Phase 4 `IsNan` op (`a.ne(a)`) had been silently wrong. NaN tests now use the
+bit pattern (`|bits| > 0x7ff0...0`); this is pinned by `test_isnan_op_is_bitwise`, and listed on
+the upstream-issues page.
+
+## Performance
+
+Kernel time per logp + gradient evaluation, timed from Rust. The libm and vectorized builds
+are alternated in the same window, 7 rounds, minimum; the medians agree within 2%.
+
+| Model | libm per lane (us) | Vectorized (us) | Speedup |
+|---|---|---|---|
+| Poisson GLM, N=10k | 46.5 | 36.2 | 1.28x |
+| StudentT regression, N=5k | 31.9 | 23.9 | 1.33x |
+| Beta-Binomial, G=200 | 3.98 | 2.53 | 1.57x |
+| HLR, N=10k | 19.0 | 19.2 | 0.99x |
+| Eight schools | 0.040 | 0.052 | 0.76x |
+
+- **The exp portion itself is about 4x faster;** the whole kernel gains less because the rest
+  of each row is unchanged. In the Poisson kernel, about 20 us of the per-evaluation time is
+  the HLR-like mat-vecs, sums and gradient terms.
+- **Eight schools is 12 ns slower per evaluation,** from the select-heavy code at width 1 on 8
+  elements.
+
+Sampling speedup against nutpie: 4 chains, 1000 tune + 1000 draws, median of 5, median of the
+per-run ratios. Measured with no other benchmark jobs running; load average (1, 5, 15 min)
+5.94 / 7.46 / 11.06 before and 4.04 / 5.39 / 8.79 after.
+
+| Model | Phase 4, libm per lane | Phase 7, vectorized | Mojo s / nutpie s (Phase 7) |
+|---|---|---|---|
+| Poisson GLM, N=10k | 2.51x | **3.23x** | 0.330 / 1.058 |
+| StudentT regression, N=5k | 2.02x | **2.44x** | 0.260 / 0.636 |
+| Beta-Binomial, G=200 | 1.66x | **2.12x** | 0.100 / 0.213 |
+| HLR, N=10k | 5.54x | 5.46x | 0.294 / 1.611 |
+| Eight schools | 1.00x | **0.86x** | 0.0176 / 0.0148 |
+
+- **Eight schools is a small regression at 4 chains.** The 1-chain figure is 1.28x (9.4 ms vs
+  12.1 ms). The 12 ns per evaluation explains about 0.7 ms of a 17.6 ms 4-chain run; the rest
+  is thread and sampler overhead on a tiny model, which was already 0.93x with the
+  hand-written kernel in rev 0.1.0.
+- **Earlier session.** Under load average 10-14 the same runs gave 3.14x / 2.34x / 2.15x /
+  5.62x / 0.78x. An interleaved A/B of eight schools' libm and vectorized builds there gave
+  18.1 vs 17.9 ms.
+- **HLR** is within run-to-run variation of Phase 4, as expected: it has no transcendentals in
+  its per-row work.
+
+## Not done in Phase 7
+
+- **psi** is still per lane. It appears in the gradients of models with gammaln (for example
+  Beta-Binomial).
+- **erf, erfc, pow and trig** are still per-lane libm calls.
+- **lgamma for x <= 0** goes through libm.
 
 ---
 

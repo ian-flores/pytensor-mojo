@@ -4,6 +4,8 @@ Writes into docs/_generated/:
   results_home.md       headline results table (all sampled models, 4 chains)
   bench_spec.md         datasheet spec tables (Min / Typ / Max over the 5 benchmark reps)
   accuracy_spec.md      special-function accuracy spec table
+  accuracy7_spec.md     vectorized exp/log/log1p/expm1/lgamma accuracy (10M points each)
+  kernels7_spec.md      kernel time, libm per lane vs vectorized transcendentals
   supported_ops.md      tensor and scalar op tables, read from ndcodegen's dispatch and op table
   distributions.md      distribution / transform table, from the Phase 4 census (missing_ops)
   fig-speedup.svg       Figure: sampling speedup vs nutpie, per model (min..max whiskers)
@@ -116,6 +118,29 @@ def bench_spec(models):
     return "\n".join(out)
 
 
+def accuracy7_spec():
+    p = BENCH / "phase7_accuracy.json"
+    rows = json.loads(p.read_text())
+    lines = ["| Parameter | Conditions | n | Mean | Max | Unit | Within 0.5 ulp |",
+             "|---|---|---:|---:|---:|---|---:|"]
+    for r in rows:
+        lines.append(f"| {r['func']} error | {r['set']} | {r['n']:,} | {r['mean_ulp']:.3f} | {r['max_ulp']:.3f} | ulp | "
+                     f"{100 * r['frac_le_half']:.2f}% |")
+    return "\n".join(lines) + "\n"
+
+
+def kernels7_spec():
+    res = json.loads((BENCH / "phase7_kernels.json").read_text())
+    order = ["poisson_glm_N10000", "robust_studentt_N5000", "beta_binomial_G200", "hlr", "es8"]
+    lines = ["| Parameter | Conditions | libm per lane | Vectorized | Unit | Speedup |",
+             "|---|---|---:|---:|---|---:|"]
+    for k in order:
+        v = res[k]
+        lines.append(f"| logp + gradient per evaluation, {SHORT[k]} | from Rust, min of 7 alternating rounds | "
+                     f"{v['libm_us']:.3g} | {v['simd_us']:.3g} | us | {v['speedup']:.2f}x |")
+    return "\n".join(lines) + "\n"
+
+
 def accuracy_spec():
     rows = json.loads((BENCH / "phase4_accuracy.json").read_text())
     ref = {"gammaln": "40-digit Decimal", "psi": "40-digit Decimal", "erfc": "40-digit Decimal"}
@@ -123,7 +148,7 @@ def accuracy_spec():
              "|---|---|---|---:|---:|---|---:|---:|"]
     for r in rows:
         op = r["op"]
-        refn = ref.get(op, "numpy" if op in ("expm1", "pow", "log1mexp") or "std.math" in op else "scipy.special")
+        refn = ref.get(op, "numpy" if op in ("expm1", "pow", "log1mexp", "log", "log1p") or "std.math" in op else "scipy.special")
         sr = f"{r['scipy_rel']:.1e}" if r["scipy_rel"] is not None else "-"
         lines.append(f"| {op} error | {r['range']}, n={r['n']} | {refn} | {r['median_ulp']:.0f} | {r['max_ulp']:.0f} | ulp | "
                      f"{r['max_rel']:.1e} | {sr} |")
@@ -153,6 +178,11 @@ TENSOR_NOTES = {
 
 def _impl_of(fn, arity):
     e = fn(*["x", "y", "z"][:arity])
+    if "slgamma" in e:
+        return "vectorized: Chebyshev kernel at the zeros, recurrence, Stirling (`mojo_math`); libm for x <= 0"
+    for k, nm in (("sexpm1", "expm1"), ("slog1p", "log1p"), ("sexp", "exp"), ("slog", "log")):
+        if k in e:
+            return f"vectorized fdlibm-style {nm} (`mojo_math`, <= 1 ulp)" + (" (inside formula)" if not e.startswith(k) else "")
     if "vpsi" in e:
         return "own implementation (reflection, root Taylor series, compensated recurrence + asymptotic)"
     if "vlgamma" in e:
@@ -301,6 +331,8 @@ def build():
         "results_home.md": results_home(models),
         "bench_spec.md": bench_spec(models),
         "accuracy_spec.md": accuracy_spec(),
+        "accuracy7_spec.md": accuracy7_spec(),
+        "kernels7_spec.md": kernels7_spec(),
         "supported_ops.md": supported_ops(),
         "distributions.md": distributions(),
         "fig-speedup.svg": fig_speedup(models),

@@ -69,16 +69,29 @@ sum in a register and writes it out only when the index changes; otherwise it fa
 per-lane adds. This is correct for any index order. It took the regression kernel from 36.7 us
 to 23.0 us.
 
-## libm and std.math
+## Transcendentals
 
-| Function | Source in generated code | Why |
+| Function | Source in generated code | Accuracy |
 |---|---|---|
-| `exp` | libm, per lane | Mojo 1.2 `std.math.exp(Float64)` has up to 8e-12 relative error |
-| `log`, `log1p`, `sqrt` | Mojo `std.math`, vectorized | Measured within 1 ulp |
-| `lgamma` | libm `lgamma_r`, per lane | Correctly rounded; `lgamma_r` is reentrant |
-| `psi` | own implementation | No libm digamma; see [accuracy](accuracy.md) |
-| `erf`, `erfc`, `expm1`, `pow`, trig | libm, per lane | Within a few ulp |
+| `exp`, `log`, `log1p`, `expm1` | vectorized, `pytensor_mojo.mojo_math` (fdlibm algorithms) | <= 1 ulp, measured over 10M points each |
+| `lgamma`, x > 0 | vectorized, `mojo_math`: Chebyshev kernel of `lgamma(x) / ((x-1)(x-2))` on [0.75, 3], recurrence, Stirling | <= 4 ulp (measured about 3) |
+| `lgamma`, x <= 0 | libm `lgamma_r`, only for the lanes that need it | libm |
+| `sqrt` | Mojo `std.math`, vectorized | Within 1 ulp |
+| `psi` | own implementation, per lane | See [accuracy](accuracy.md) |
+| `erf`, `erfc`, `pow`, trig | libm, per lane | Within a few ulp |
 
-Per-lane libm calls are the main remaining cost in models whose per-row work is
-transcendental (Poisson, StudentT, Beta-Binomial). The opt-in `PYTENSOR_MOJO_STDEXP` flag shows
-the trade-off ([Environment flags](guide/flags.md)).
+The vectorized functions port the fdlibm algorithms to Mojo `SIMD` with no branches:
+
+- **exp** uses Cody-Waite reduction by ln 2, with a split constant whose high part has
+  trailing zeros so the product is exact, then fdlibm's Remez rational kernel. The result is
+  rebuilt with a power of two made from the exponent bits, split into two exact factors near
+  the subnormal and overflow edges.
+- **log and log1p** split the argument into 2^k (1 + f) with 1 + f in [sqrt(2)/2, sqrt(2)),
+  and use the `s = f / (2 + f)` polynomial kernel. log1p adds fdlibm's correction for the
+  rounding of `1 + x`.
+- **Special cases** (inf, NaN, signed zero, subnormal inputs and results) are handled with
+  `select`.
+
+Mojo 1.2's own `std.math.exp(Float64)` is off by up to 8e-12 relative, so it is not used.
+`PYTENSOR_MOJO_LIBM=1` switches all five functions back to per-lane libm
+([Environment flags](guide/flags.md)).

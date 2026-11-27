@@ -1,0 +1,37 @@
+{
+ "hlr": {
+  "libm_us": 18.9825479,
+  "simd_us": 19.23213545,
+  "speedup": 0.9870223693750035,
+  "libm_median_us": 19.3556354,
+  "simd_median_us": 19.39516045
+ },
+ "es8": {
+  "libm_us": 0.039802854500000005,
+  "simd_us": 0.052215604,
+  "speedup": 0.7622789252806499,
+  "libm_median_us": 0.0402567295,
+  "simd_median_us": 0.053012542
+ },
+ "poisson_glm_N10000": {
+  "libm_us": 46.5240729,
+  "simd_us": 36.208779150000005,
+  "speedup": 1.2848837765909595,
+  "libm_median_us": 47.36742295,
+  "simd_median_us": 36.8722583
+ },
+ "robust_studentt_N5000": {
+  "libm_us": 31.9066521,
+  "simd_us": 23.942106250000002,
+  "speedup": 1.3326585291550945,
+  "libm_median_us": 32.93069165,
+  "simd_median_us": 24.30557085
+ },
+ "beta_binomial_G200": {
+  "libm_us": 3.98223335,
+  "simd_us": 2.5296208499999997,
+  "speedup": 1.5742411950787014,
+  "libm_median_us": 4.0358729,
+  "simd_median_us": 2.5889917000000002
+ }
+}
