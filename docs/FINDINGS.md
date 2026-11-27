@@ -803,6 +803,149 @@ an accurate vectorized exp/log1p/lgamma is the next step for these models.
 
 ---
 
+# Phase 6: posteriordb sweep
+
+Goal: measure coverage on models that were not written for this backend. The models come
+from [posteriordb](https://github.com/stan-dev/posteriordb). The missing ops are ranked, and
+the cheap ones are added.
+
+## 1. Set-up
+
+- **Data.** A shallow, sparse, blob-less clone of posteriordb sits in `.cache/posteriordb`
+  (git-ignored; `python bench/posteriordb/sweep.py --fetch`). Only JSON data, the reference
+  draws and the Stan sources are checked out, and only the JSON is loaded.
+- **Models.** 28 posteriors that have reference draws (`reference_posterior_name` not null):
+  - 6 GLMs (binomial, logistic, Bernoulli with a power link);
+  - 10 linear regressions, among them `diamonds` (N=5000, K=24);
+  - eight schools, centered and non-centered;
+  - a two-component Gaussian mixture;
+  - AR(5), ARMA(1,1) and GARCH(1,1);
+  - a 2-state HMM;
+  - three GPs (one basis-function approximation, two exact);
+  - two ODEs.
+
+  Each was ported to PyMC by hand (`bench/posteriordb/models.py`) with Stan's
+  parameterization; the deviations are listed per model. The notable ones:
+  - Half* priors for `<lower=0>` scales with 0-centred priors, which differ from Stan by a
+    constant;
+  - the recursions are written with `pytensor.scan`;
+  - the ODE solvers are replaced by fixed-step RK4 (8 steps per interval) inside a scan;
+  - Dirichlet / PyMC's simplex transform for the HMM's `simplex[2]`;
+  - a hand-written `positive_ordered` transform.
+- **Harness.** `bench/posteriordb/sweep.py` runs these steps per model:
+  - `missing_ops`;
+  - compile, then logp / dlogp vs PyMC at rtol 1e-10 on 20 points;
+  - `pytensor_mojo.sample` and nutpie, 4 chains, 1000 tune + 1000 draws;
+  - comparison with the reference draws: every mean within 4.5 combined MCSEs and max
+    R-hat < 1.05;
+  - timing, the median of 3 sampler-only runs.
+
+  It writes `bench/posteriordb_results.json` and the tables
+  `docs/_generated/posteriordb_*.md`.
+
+## 2. Census before any new op
+
+`ndcodegen_ext` switched off (`PYTENSOR_MOJO_NO_EXT=1`):
+
+| op | models needing it | models it unblocks alone |
+|---|---:|---:|
+| `IncSubtensor` | 14 | 8 |
+| `AllocEmpty` | 6 | 0 |
+| `Scan` | 5 | 0 |
+| `Split` | 3 | 0 |
+| `Cholesky`, `SolveTriangular`, `AllocDiag`, `ExtractDiag` | 2 each | 0 |
+| `CumOp`, `Second` (scalar) | 2 each | 0 |
+| `CAReduce[Maximum]`, `CAReduce[OR]`, `SpecifyShape` | 1 each | 0 |
+
+`IncSubtensor` dominates. It is the gradient of `beta[0] + beta[1] * x`, and PyMC builds it for
+every model that indexes a vector parameter. The Phase 4 census used whole-vector parameters,
+so it never hit this op.
+
+`missing_ops` also had **blind spots**. It reported nothing missing for three models that
+still failed:
+
+- `dogs` and `dogs_hierarchical` raised in codegen. Their `All` runs over a 2-D bool array
+  (the Bernoulli check on matrix data), and only the 1-D `All` is fused.
+- **`nes_logit_model` compiled and gave wrong answers silently.** logp was off by up to 66%.
+  The cause: the view `q[1:]` of shape (1,), the length-1 `beta`, kept stride 1, so the fused
+  SIMD loop loaded `q[1 + i]` instead of broadcasting `q[1]`. The fix is one line in
+  `Codegen.loader`: a length-1 dim broadcasts. There is a regression test
+  (`tests/test_ndcodegen_ext.py::test_length_one_view_broadcasts_in_fused_loop`).
+
+## 3. Ops added
+
+The new ops are in a separate module, `pytensor_mojo/ndcodegen_ext.py`, hooked into
+`ndcodegen.py` in three places: the first check in `Codegen.node`, the scalar table in
+`scalar_expr`, and `missing_ops`. Nothing in the existing dispatch was restructured.
+
+| op | implementation |
+|---|---|
+| `IncSubtensor` / `SetSubtensor` | copy of the base, then `+=` / `=` over the view; constant int indices and constant slices (any step on static dims) |
+| `Subtensor` with a step | strided view; negative strides allowed (`x[::-1]`, the gradient of cumsum) |
+| `CumOp` | cumsum / cumprod along one axis or flattened |
+| `AllocEmpty` | zero-filled arena buffer |
+| `SpecifyShape` | no-op view |
+| `CAReduce[Maximum / Minimum]` | max / min over all or some axes (`logsumexp`) |
+| `All` over N-d | AND loop over a materialized mask |
+| `Second` (scalar) | `second(a, b) = b` |
+
+A second broadcast bug of the same kind came up while testing `max` for `logsumexp(M, axis=0)`.
+A computed `(1, n)` buffer got C strides `(n, 1)`, so when it was broadcast against `(m, n)` the
+reads ran past the buffer. `Codegen.c_strides` now gives extent-1 dims stride 0, and there is a
+regression test. None of the 28 posteriors hit it.
+
+Tests: `tests/test_ndcodegen_ext.py` checks each op and its gradient against the C backend
+(rtol 1e-12) through `MOJO_ND`, including PyMC's ordered transform. Model-level tests against
+PyMC at rtol 1e-10 are in `tests/test_posteriordb.py`. `Scan`, `Split` and the linear algebra
+ops were not attempted.
+
+## 4. Result
+
+**28 posteriors: 21 compile, 21 match PyMC at rtol 1e-10, 19 match the reference
+posterior.** Before the sweep, 12 had no missing ops: 10 of them compiled and matched,
+`dogs_hierarchical` failed in codegen and `nes_logit_model` gave wrong answers.
+
+- The worst logp relative error against PyMC is 5.5e-14 (`accel_gp`).
+- The two reference misses are sampling problems; their means still agree with the
+  reference:
+  - centered eight schools: R-hat 1.06 with Mojo, 1.03-1.13 with nutpie;
+  - `low_dim_gauss_mix`: with seed 1, one Mojo chain stays in the merged-component mode. Seeds
+    2 and 3 mix.
+- nutpie fails the reference check on `accel_gp` (3087 divergences, R-hat 4.1), where Mojo
+  matches with 235 divergences.
+- Still blocked:
+  - `Scan`: 5 models (ARMA, GARCH, HMM, both ODEs). It unblocks the two ODEs alone; with
+    `Split` it would unblock all 5 (the HMM also needs `CAReduce[OR]`);
+  - Cholesky / triangular solve / diag: both exact GPs.
+
+## 5. Speed
+
+Median speedup **0.91x** (0.21x to 1.53x, n=21). Per-model timings are in
+[the sweep page](benchmarks/posteriordb.md).
+
+- **Small models (most of posteriordb) do not benefit.** The kernel is as fast as numba or
+  faster, but a whole run is 0.02-0.3 s, and sampler-side costs dominate. Step counts were
+  not recorded, so the 0.6-1.0x cases are not explained further.
+- **Logistic models** with N = 750-3000 gain 1.1-1.5x.
+- **`diamonds` is 0.21x** (kernel 169 us against 47 us). The gradient term
+  `Xc^T ((y - mu) / sigma^2)` is not fused, because PyTensor applies the division after the
+  `ExpandDims`, so the planner's coldot pattern does not match. The fallback is a (5000, 1)
+  elemwise plus the scalar `Dot` triple loop, with no BLAS. `accel_gp` (0.44x) has the same
+  unfused `Dot` loops. Extending the fusion planner to this shape is the next speed item; it
+  was not done here so that the existing codegen stays untouched.
+
+## NOT done in Phase 6
+
+- `Scan`, `Split`, linalg (`Cholesky`, `SolveTriangular`, `AllocDiag`, `ExtractDiag`) and
+  `CAReduce[OR]`.
+- Fusion for `X^T (r / s)` and for computed mat-vec operands (diamonds, accel_gp).
+- Hierarchical models beyond eight schools: posteriordb's radon-style hierarchical posteriors
+  have no reference draws.
+- Timings are 3 runs per sampler, not the 5 that `CONTRIBUTING.md` asks for in speed claims.
+  Treat them as a survey, not a benchmark.
+
+---
+
 # Phase 7: SIMD transcendentals
 
 Phase 4 left the Poisson, StudentT and Beta-Binomial models at 1.6-2.5x against nutpie,

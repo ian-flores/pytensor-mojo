@@ -26,6 +26,24 @@ All notable changes. Revisions follow the datasheet numbering used in the docume
 - `mojo-nuts`: `--help`, and per-draw `diverging` and `n_steps` in the output.
 - Documentation site (MkDocs + Material) with generated reference tables and figures.
 - `CONTRIBUTING.md` and this changelog.
+- posteriordb coverage sweep (`bench/posteriordb/`): 28 hand-ported posteriors with reference
+  draws, checked against PyMC, the reference posterior and nutpie; generated coverage and
+  missing-op ranking tables; `tests/test_posteriordb.py`.
+- Extension ops in `pytensor_mojo/ndcodegen_ext.py`: `IncSubtensor` / `SetSubtensor` with
+  constant indices, stepped `Subtensor`, `CumOp`, `AllocEmpty`, `SpecifyShape`, max / min
+  reductions, `All` over N-d bool arrays and the scalar op `Second`.
+  `PYTENSOR_MOJO_NO_EXT=1` disables them.
+
+### Fixed
+
+- A length-1 view such as `q[1:]` feeding a fused loop was read with stride 1 instead of
+  being broadcast, which gave wrong logp and gradients silently (found by the posteriordb
+  sweep on `nes_logit_model`).
+- A computed buffer with an extent-1 dim (e.g. the `(1, n)` max inside `logsumexp(M, axis=0)`)
+  kept a nonzero stride on that dim, so broadcasting it against `(m, n)` read out of bounds.
+  `Codegen.c_strides` now gives extent-1 dims stride 0.
+- `isnan` in generated code: Mojo's SIMD `.ne()` is an ordered comparison, so `x != x` was
+  False for NaN. NaN tests now use the bit pattern.
 
 ### Changed
 
@@ -35,11 +53,6 @@ All notable changes. Revisions follow the datasheet numbering used in the docume
   int64.
 - PyTensor semantics are reproduced for numeric Switch conditions, bool upcasts and bool
   Mul / Add.
-
-### Fixed
-
-- `isnan` in generated code: Mojo's SIMD `.ne()` is an ordered comparison, so `x != x` was
-  False for NaN. NaN tests now use the bit pattern.
 
 ## 0.1.0 (2026-11-26)
 

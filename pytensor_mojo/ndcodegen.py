@@ -432,7 +432,7 @@ class Codegen:
     def c_strides(shape):
         st, acc = [], "1"
         for d in reversed(shape):
-            st.append(acc)
+            st.append("0" if d == "1" else acc)   # extent-1 dims broadcast when read
             acc = _mul(acc, d)
         return list(reversed(st))
 
@@ -670,6 +670,8 @@ class Codegen:
         for x in node.inputs:
             if x not in inl:
                 self.ensure(x)
+        if _ext.claims(node):   # extension ops (ndcodegen_ext), checked first
+            return _ext.emit(self, node)
         if isinstance(op, Elemwise):
             return self.elemwise(node)
         if isinstance(op, DimShuffle):
@@ -815,7 +817,7 @@ class Codegen:
         return self.nd_elemwise(node)
 
     def scalar_expr(self, sop, args, w, types=None, otype=None):
-        tbl = _sop_table(w)
+        tbl = {**_sop_table(w), **_ext.scalar_table(w)}
         if isinstance(sop, ps.Composite):
             env = dict(zip(sop.fgraph.inputs, args))
             for nd in sop.fgraph.toposort():
@@ -864,7 +866,7 @@ class Codegen:
         if isinstance(val, Buf):
             st = val.strides[-1]
             base = val.index(["0"] * (val.ndim - 1) + [i])
-            if st == "0":
+            if st == "0" or val.shape[-1] == "1":   # a length-1 dim broadcasts (e.g. the view q[1:] of shape (1,))
                 return f"{F}({val.ptr}[unsafe_offset={val.index(['0'] * val.ndim)}])"
             if st == "1":
                 return f"{val.ptr}.unsafe_offset({base}).unsafe_load[width={w}]()"
@@ -1483,10 +1485,12 @@ def missing_ops(fgraph):
     Mirrors the dispatch in Codegen.node and the scalar table, without generating code, so a
     census can list every gap of a graph in one pass instead of stopping at the first error.
     """
-    known_scalar = set(_sop_table("1"))
+    known_scalar = set(_sop_table("1")) | set(_ext.scalar_table("1"))
     miss_t, miss_s = set(), set()
     for node in fgraph.apply_nodes:
         op = node.op
+        if _ext.claims(node):
+            continue
         if isinstance(op, Sum) or (isinstance(op, CAReduce) and isinstance(op.scalar_op, (ps.Add, ps.AND))):
             continue
         if isinstance(op, CAReduce):
@@ -1500,3 +1504,6 @@ def missing_ops(fgraph):
             _scalar_ops_of(op.scalar_op, acc)
             miss_s |= {t.__name__ for t in acc - known_scalar}
     return sorted(miss_t), sorted(miss_s)
+
+
+from . import ndcodegen_ext as _ext  # noqa: E402  (extension ops; imported last, it uses this module)
